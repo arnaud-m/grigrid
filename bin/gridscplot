@@ -1,0 +1,123 @@
+#!/usr/bin/octave -qf
+###################################################
+#     Copyright (C) 2011 Arnaud Malapert.
+#
+#     This program is free software: you can redistribute it and/or modify                    
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+###################################################
+
+
+1; #not a function file
+
+##--------------------------------------------------------------------
+## Setup variables and functions
+##--------------------------------------------------------------------
+
+ global VERSION="0.1"
+
+ function _version()
+   global VERSION;
+   printf("%s %s\n", program_name(), VERSION);
+   disp("Copyright (C) 2011 Arnaud Malapert");
+   disp("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.");
+   disp("This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.");
+   disp("\n\nWritten by A. Malapert.") ;
+ endfunction
+
+function _help()
+  printf("%s generate data files and a (basic) gnuplot scripts which produce scatter plots.", program_name());
+    disp("At least two result files RES must define the lines of the graph.")
+  
+  disp("\n\tUsage: gridlplot [OPTION]... RES... \n")
+  disp("Options:")
+  disp("\t--help        display this help and exit")
+  disp("\t--version     output version information and exit");
+          
+  disp("\n\nReport bugs to <malapert (dot) arnaud (at) gmail (dot) com>.")
+ endfunction
+
+function R=computeRatios(IND,M1,M2)
+global TIME;
+global BCK;
+R=horzcat( M1(IND, TIME)./M2(IND, TIME),  (M1(IND, BCK) + 1)./ ( M2(IND, BCK) + 1) );
+endfunction
+
+
+##--------------------------------------------------------------------
+## Test for prerequisites
+##--------------------------------------------------------------------
+
+args = argv ();
+if( nargin > 0)
+  if(strcmp(args{1},"--version"))
+    _version();
+    exit(0);
+  elseif(strcmp(args{1},"--help"))
+    _help();
+    exit(0);
+  endif
+endif
+
+if(nargin<2)
+  _help();
+  error("This octave script takes at least two arguments.");
+endif
+
+source('~/.grigrid/libgrigrid.m');
+
+##--------------------------------------------------------------------
+## Do something
+##--------------------------------------------------------------------
+for i = 1:nargin
+  M1=fread(args{i});
+  for j =(i+1):nargin
+    M2=fread(args{j});
+    O1=findOPT(M1); #optimums found by the first solver
+    O2=findOPT(M2); #optimums found by the second solver
+    
+    OS=setdiff(O1,O2); #optimums found only by the first solver
+    SO=setdiff(O2,O1); #optimums found only by the second solver
+    OO=intersect(O1,O2);  #optimums found by both solvers
+    
+    T1=find(M1(OO,TIME) >=THRESHOLD);
+    ##optimums found by both solvers in more than THRESHOLD seconds
+    OOT=OO( T1( find(M2(OO(T1),TIME) >=THRESHOLD)));  
+    
+    filename=strcat( substr(args{1}, 1, rindex(args{1},'.')-1),"-",substr(args{2}, 1, rindex(args{2},'.')-1))
+    ##produce gnuplot datafile
+    datafile=strcat(filename,".dat");
+    fid = fopen (datafile, "w");
+    fprintf(fid, "%s\n", strftime(save_header_format_string,  localtime (time ())))
+    fprintf(fid, "#opt/opt\n")
+    fprintf(fid, "%f %f\n", computeRatios( OOT, M1, M2))
+    fprintf(fid, "\n\n#opt/sat\n")
+    fprintf(fid, "%f %f\n", computeRatios( OS, M1, M2))
+    fprintf(fid, "\n\n#sat/opt\n")
+    fprintf(fid, "%f %f\n", computeRatios( SO, M1, M2))
+    fclose (fid);
+    printf("Gnuplot datafile written in %s.\n", datafile);
+    
+    ##produce gnuplot script
+    scriptfile=strcat(filename,".gpl");
+    fid = fopen (scriptfile, "w");
+    fdisp(fid, "set title ''") 
+    fdisp(fid, "set xlabel 'Time (s)'") 
+    fdisp(fid, "set ylabel 'Backtracks'")
+    fdisp(fid, "set logscale xy");
+    fdisp(fid, "set key outside top center horizontal noenhanced spacing 1");
+    fprintf(fid, "plot '%s' index 0 with points title 'Opt - Opt',\\\n'%s' index 1 with points title 'Opt - Sat',\\\n'%s' index 2 with points title 'Sat - Opt';\n",datafile, datafile, datafile)
+    fclose (fid);
+    printf("Gnuplot script written in %s.\n", scriptfile);
+    system(cstrcat("gnuplot -persist ", scriptfile), "async");
+  endfor
+endfor

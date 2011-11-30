@@ -1,0 +1,25 @@
+#generated manpages 
+*.1
+
+#LateX
+*.toc 
+*.aux
+*.lof
+*.lot
+*.bbl
+*.blg
+*.ind
+*.loa
+*.idx
+*.out
+*.spl
+*.rel
+
+
+# Random OS stuff
+.DS_Store
+Thumbs.db
+*.bak
+*.log
+*~
+

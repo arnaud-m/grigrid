@@ -1,0 +1,100 @@
+#!/bin/sh
+###################################################
+#     Copyright (C) 2011 Arnaud Malapert.
+#
+#     This program is free software: you can redistribute it and/or modify                    
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+###################################################
+
+PROG=`basename $0 .sh`
+version() {
+
+    echo  "$PROG 0.1
+     
+Copyright (C) 2011 Arnaud Malapert.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+     
+Written by A. Malapert."
+}
+
+help() {
+echo "\
+$PROG generates new jobs (shell script) for the batch server. 
+For each 'file' matching PATTERN in a subdirectory of BENCH, $PROG generates a script 'file.sh' which executes a single command CMD. 
+The target file is referenced in CMD by using '{}'. 
+
+For further automatic analysis of the optimization results, we will assume that : 
+a) each schell script solves exactly one instance, 
+b) the standard output is formatted according to the rules specified in the documentation,
+c) The standard and error outputs are redirected to files with extension .o and .e respectivly.
+
+Usage: $PROG [OPTION]... BENCH PATTERN CMD
+
+Options:
+ --help        display this help and exit
+ --version     output version information and exit
+     
+Report bugs to <malapert (dot) arnaud (at) gmail (dot) com>."
+}
+
+#--------------------------------------------------------------------
+# Setup Global Variables
+#--------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------
+# Test for prerequisites
+#--------------------------------------------------------------------
+
+
+if [ $# -eq 0 ] || [ $1 = "--help" ]; then
+    help
+    exit 0
+elif [ $1 = "--version" ]; then
+    version
+    exit 0
+elif [ $# -lt 3 ] ; then
+    help
+    exit 1
+fi
+
+
+#--------------------------------------------------------------------
+# Do something
+#--------------------------------------------------------------------
+
+SOURCE=$1
+if [ -d  $SOURCE ]; then
+    shift	
+    PATTERN=$1
+    shift
+    #echo "start to generate job scripts in the directory $SOURCE ..."	
+    ##find all files matching PATTERN in the SOURCE directory
+    find  $SOURCE  -name $PATTERN -print0 | while read -d $'\0' FILE
+    ##generate a shell script for each file
+    do
+	SCRIPT="${FILE%.*}.sh" #change the extension
+	echo "#!/bin/sh" > $SCRIPT 
+        ##replace all occurence of {} in CMD by FNAME
+	FNAME=`basename $FILE`
+	CMD=`echo $*| sed "s:{}:$FNAME:g"`
+	echo $CMD >> $SCRIPT
+	chmod +x $SCRIPT
+    done
+    echo "jobs matching $PATTERN generated in the directory $SOURCE [OK]"
+else
+    echo "$SOURCE is not a directory";
+    exit 2;
+fi
+

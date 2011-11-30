@@ -1,0 +1,97 @@
+#!/bin/sh
+###################################################
+#     Copyright (C) 2011 Arnaud Malapert.
+#
+#     This program is free software: you can redistribute it and/or modify                    
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+###################################################
+
+PROG=`basename $0 .sh`
+version() {
+
+    echo  "$PROG 0.1
+     
+Copyright (C) 2011 Arnaud Malapert.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+     
+Written by A. Malapert."
+}
+
+help() {
+echo "$PROG recursively searches shell scripts in directories BENCH(s), and submits them to a batch server.
+
+Usage: $PROG [OPTION].. BENCH...
+     
+Options:
+  -s. --sequential      sequential submission on localhost. 
+  -p, --print              only print submission requests. 
+ 
+ --help         display this help and exit
+--version     output version information and exit
+     
+Examples:
+
+    
+Report bugs to <malapert (dot) arnaud (at) gmail (dot) com>."
+}
+
+#--------------------------------------------------------------------
+# Setup Global Variables
+#--------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------
+# Test for prerequisites
+#--------------------------------------------------------------------
+
+if [ $# -eq 0 ] || [ $1 = "--help" ]; then
+    help
+    exit 0
+elif [ $1 = "--version" ]; then
+    version
+    exit 0
+fi
+
+
+#--------------------------------------------------------------------
+# Do something
+#--------------------------------------------------------------------
+
+
+if [ $1 = "-s" ] || [ $1 = "--sequential" ] ; then
+    SUBT=1;
+    shift
+elif [ $1 = "-p" ] || [ $1 = "--print" ] ; then
+    SUBT=2;
+    shift
+else
+    SUBT=0;
+fi
+
+for DIR in "$@" ; do 
+    if [ -d $DIR ] ; then
+	echo "entering in $DIR ..."
+	case $SUBT in 
+	    1) find $DIR  -name '*.sh' -execdir sh -c '{}  > {}.o 2> {}.e' \; ; ##need to start a new shell for valid redirection
+		echo "sequential execution $DIR  [OK]";;
+	    2) 	find $DIR  -name '*.sh' -print0 | xargs -0 cat  | sed '/^#!/d';
+		echo "print qsub commands of $DIR  [OK]";;	
+	    *)  find $DIR  -name '*.sh' -execdir qsub {} \; 
+		echo "qsub $DIR  [OK]";
+	esac
+    else
+	echo "qsub $DIR  [FAIL]"	
+    fi
+done
+

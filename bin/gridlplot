@@ -1,0 +1,136 @@
+#!/usr/bin/octave -qf
+###################################################
+#     Copyright (C) 2011 Arnaud Malapert.
+#
+#     This program is free software: you can redistribute it and/or modify                    
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+###################################################
+
+
+1; #not a function file
+
+##--------------------------------------------------------------------
+## Setup variables and functions
+##--------------------------------------------------------------------
+
+ global VERSION="0.1"
+
+ function _version()
+   global VERSION;
+   printf("%s %s\n", program_name(), VERSION);
+   disp("Copyright (C) 2011 Arnaud Malapert");
+   disp("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.");
+   disp("This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.");
+   disp("\n\nWritten by A. Malapert.") ;
+ endfunction
+
+function _help()
+  printf("%s generate a data file and a (basic) gnuplot script which allow to plot the percentage of  (optimally) solved instances as a function of the time.", program_name());
+  disp("NAME is the filename prefix for generated files.")
+  disp("At least two result files RES must define the lines of the graph.")
+  
+  disp("\n\tUsage: gridlplot [OPTION]... NAME RES... \n")
+  disp("Options:")
+  disp("\t--help        display this help and exit")
+  disp("\t--version     output version information and exit");
+          
+  disp("\n\nReport bugs to <malapert (dot) arnaud (at) gmail (dot) com>.")
+ endfunction
+
+function R=computeOptTime(M)
+  global TIME;
+  n= size(M,1);
+  V=sort(M( findOPT(M), TIME));
+  R = [];
+  len = length(V);
+  if(len>0)       
+    R = [ V(1) 0];
+    idx  = 1;
+    do 
+      i = idx;
+      while( i <= len && V(idx) == V(i) )
+	i++;
+      endwhile
+      R = [R; V(idx) (100*(i - 1))/n];
+      idx=i;
+    until idx > len
+  endif
+endfunction
+
+##--------------------------------------------------------------------
+## Test for prerequisites
+##--------------------------------------------------------------------
+
+args = argv ();
+if( nargin > 0)
+  if(strcmp(args{1},"--version"))
+    _version();
+    exit(0);
+  elseif(strcmp(args{1},"--help"))
+    _help();
+    exit(0);
+  endif
+endif
+
+if(nargin<2)
+  _help();
+  error("This octave script takes at least two arguments.");
+endif
+
+source('~/.grigrid/libgrigrid.m');
+
+##--------------------------------------------------------------------
+## Do something
+##--------------------------------------------------------------------
+##Clear output file, write  header
+datafile=strcat(args{1},".dat");
+fid = fopen (datafile, "w");
+fprintf(fid, "%s\n", strftime(save_header_format_string,  localtime (time ())));
+
+nlines=0;
+##Loop over result files and generate gnuplot data
+for i = 2:nargin
+  R=computeOptTime(fread(args{i}));
+  if( size(R, 1) > 0)  
+    nlines++;
+    if(nlines>1) fprintf(fid, "\n\n"); endif
+    label = substr(args{i}, 1, rindex(args{i}, '.')-1); 
+    fprintf(fid, "\"\" \"%s\"\n", label);
+    fprintf(fid, "%f %f\n", R') #need to transpose the matrix or change the function
+   endif
+endfor
+fclose (fid);
+printf("%i/%i curves written in %s.\n", nlines, nargin-1, datafile);
+
+## Generate gnuplot script
+if(nlines > 0) 
+  scriptfile=strcat(args{1},".gpl");
+  fid = fopen (scriptfile, "w");
+  fdisp(fid, "set title ''") 
+  fdisp(fid, "set xlabel 'Time (s)'") 
+  fdisp(fid, "set ylabel '% Optimum'")
+  fdisp(fid, "set yrange [0:100]");
+  fdisp(fid, "set logscale x");
+  fdisp(fid, "set key autotitle columnheader");
+  fdisp(fid, "set key outside top center horizontal noenhanced spacing 1");
+  fprintf(fid, "plot ");
+  for i = 1:nlines
+    fprintf(fid, "'%s' index %i  with lines ls %i", datafile, i-1, i );
+    if(i==nlines) fdisp(fid,";");
+    else fdisp(fid,",\\");
+    endif
+  endfor
+fclose (fid);
+printf("Gnuplot script written in %s.\n", scriptfile);
+system(cstrcat("gnuplot -persist ", scriptfile), "async");
+endif

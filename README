@@ -1,0 +1,34 @@
+ GRIGRID 
+ ------------------------------------------
+
+GRIGRID is a collection a java of shell scripts that ease the deployment of optimization benchmark on a cluster.
+
+ REQUIREMENTS
+ ------------
+
+- GNU bash, version 4.2.10(1)-release (i386-redhat-linux-gnu)
+- GNU Awk 4.0.0
+- GNU Octave, version 3.4.3
+- Gnuplot 4.4 patchlevel 3
+- GNU help2man 1.40.2
+
+
+ DOCUMENTATION
+ -------------
+
+Look for the most up-to-date documentation on the GRIGRID web site, under the documentation menu.
+The documentation is also available as manpages.
+ 
+
+ RELEASE
+ -------
+
+A zip archive grigrid-VERSION.tar.gz contains the following directories and files:
+- awk/
+- bin/ 
+- doc/
+- COPYING
+- Makefile
+- README
+
+Unzip the archive and type "make install" in a terminal.
