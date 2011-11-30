@@ -36,8 +36,8 @@ $(manpages) : $(MAN) ;
 dist: initdirs $(manpages);
 
 dist-archive : dist ;	
-	tar -czf $(name)-$(version).tar.gz  bin awk $(docdir)  Makefile README COPYING
-	tar -czf $(name)-test.tar.gz  test/* 	
+	tar -czf $(name)-$(version).tar.gz  octave bin awk $(docdir)  Makefile README COPYING
+	tar -czf $(name)-$(version)-test.tar.gz  test/* 	
 
 installdirs: ;
 	mkdir -p $(bindir) $(man1dir) $(libdir);

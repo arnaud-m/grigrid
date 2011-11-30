@@ -31,7 +31,6 @@
    disp("Copyright (C) 2011 Arnaud Malapert");
    disp("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.");
    disp("This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.");
-   disp("\n\nWritten by A. Malapert.") ;
  endfunction
 
 function _help()
@@ -43,7 +42,7 @@ function _help()
   disp("\t--help        display this help and exit")
   disp("\t--version     output version information and exit");
           
-  disp("\n\nReport bugs to <malapert (dot) arnaud (at) gmail (dot) com>.")
+  disp("\n\nReport bugs to <malapert (at) i3s (dot) unice (dot) fr>.")
 endfunction
 
 function str=sprintDuration(time)

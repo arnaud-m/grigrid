@@ -31,4 +31,5 @@ A zip archive grigrid-VERSION.tar.gz contains the following directories and file
 - Makefile
 - README
 
-Unzip the archive and type "make install" in a terminal.
+Unzip the archive.
+Type `make install' to install the programs and any data files and documentation.

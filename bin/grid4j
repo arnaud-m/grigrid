@@ -23,15 +23,13 @@ version() {
      
 Copyright (C) 2011 Arnaud Malapert.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
-     
-Written by A. Malapert."
+This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law."
 }
 
 help() {
 echo "$PROG deploys a benchmark for a java solver in the current directory.
 The directory DIR describes the structure of the benchmark.
-The directory 'instance' contains all benchmark instances.
+The directory 'instances' contains all benchmark instances.
 A set of properties file describes the different configurations of the solver.
 A jar file contains an executable solver which accepts at least two parameters : -p property ; -f file. 
 The deploiement occurs only when the filename of an instance matches the regular expression PATTERN. 
@@ -43,9 +41,9 @@ Options:
   --version     output version information and exit
      
 Examples:
-
+$PROG ./ '*.txt' 
      
-Report bugs to <malapert (dot) arnaud (at) gmail (dot) com>."
+Report bugs to <malapert (at) i3s (dot) unice (dot) fr>."
 }
 
 #--------------------------------------------------------------------
