@@ -1,7 +1,7 @@
  GRIGRID 
  ------------------------------------------
 
-GRIGRID is a collection a java of shell scripts that ease the deployment of optimization benchmark on a cluster.
+GRIGRID is a collection of shell scripts that eases the deployment of combinatorial benchmarks on a cluster.
 
  REQUIREMENTS
  ------------
@@ -27,6 +27,7 @@ A zip archive grigrid-VERSION.tar.gz contains the following directories and file
 - awk/
 - bin/ 
 - doc/
+-octave/
 - COPYING
 - Makefile
 - README

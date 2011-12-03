@@ -35,15 +35,14 @@
 
 function _help()
   printf("%s generate a data file and a (basic) gnuplot script which allow to plot the percentage of  (optimally) solved instances as a function of the time.", program_name());
-  disp("NAME is the filename prefix for generated files.")
-  disp("At least two result files RES must define the lines of the graph.")
-  
-  disp("\n\tUsage: gridlplot [OPTION]... NAME RES... \n")
-  disp("Options:")
-  disp("\t--help        display this help and exit")
+  disp("NAME is the filename prefix for generated files.");
+  disp("At least two result files RES must define the lines of the graph.");
+    disp("\n\tUsage: gridlplot [OPTION]... NAME RES... \n");
+  disp("Options:");
+  disp("\t--help        display this help and exit");
   disp("\t--version     output version information and exit");
           
-  disp("\n\nReport bugs to <malapert (at) i3s (dot) unice (dot) fr>.")
+  disp("\n\nReport bugs to <malapert (at) i3s (dot) unice (dot) fr>.");
  endfunction
 
 function R=computeOptTime(M)

@@ -7,6 +7,9 @@ BEGIN {
     if (/^c (MINIMIZE|MAXIMIZE) /) {
 	tab[0] = $3;
     }
+    else if (/^c CSP[ \t]*(FIRST_SOLUTION|ALL_SOLUTIONS) /) {
+	tab[0] = $4;
+    }
     else if (/^s UNSUPPORTED[ \t]*$/) {
 	tab[1] = -1; 
     } 
@@ -21,6 +24,9 @@ BEGIN {
     }
     else if (/^s UNKNOWN[ \t]*$/) {
 	tab[1] = 3;
+    }
+    else if (/^s TIMEOUT[ \t]*$/) {
+	tab[1] = 4;
     }
     else if (/^d OBJECTIVE /) {
 	tab[2] = $3;
