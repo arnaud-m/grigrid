@@ -40,10 +40,24 @@ function str=basename(filename)
   endif
  endfunction
 
+ 
+
  function R=findSAT(M)
   global STATUS;
   R=find( M(:,STATUS) == 0);
 endfunction
+
+  function R=findUNSAT(M)
+  global STATUS;
+  R=find( M(:,STATUS) == 2);
+endfunction
+
+
+function R=findUNKNOWN(M)
+  global STATUS;
+  R=find( M(:,STATUS) == 2);
+endfunction
+
 
 function R=findOPT(M)
   global STATUS;
@@ -59,4 +73,5 @@ function R=findOPT_CP(OPT, M)
   global INIT_OBJ;
   R=OPT( find( M(OPT, INIT_OBJ).-M(OPT, INIT_LB)));
 endfunction
+
 

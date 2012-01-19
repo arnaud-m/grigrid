@@ -42,7 +42,7 @@ function _help()
   disp("\t--help        display this help and exit")
   disp("\t--version     output version information and exit");
           
-  disp("\n\nReport bugs to <malapert (at) i3s (dot) unice (dot) fr>.")
+  disp("\n\nReport bugs to <arnaud (dot) malapert (at) unice (dot) fr>.")
  endfunction
 
 function R=computeRatios(IND,M1,M2)

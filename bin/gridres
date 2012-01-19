@@ -18,16 +18,18 @@
 
 PROG=`basename $0 .sh`
 version() {
-
-    echo  "$PROG 0.1
+cat <<EOF
+$PROG 0.1
      
 Copyright (C) 2011 Arnaud Malapert.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law."
+This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+EOF
 }
 
 help() {
-echo "$0 summarizes results of jobs (files .o and .e) of multiple directories BENCH(s). \
+cat <<EOF
+$0 summarizes results of jobs (files .o and .e) of multiple directories BENCH(s). \
 $0 generate three files for each directory BENCH (explored recursivly).
 A file BENCH-e.log is created from all error files .e. 
 An archive BENCH-o from all output files .o ;  
@@ -47,7 +49,8 @@ Options:
   --help        display this help and exit
   --version     output version information and exit
    
-Report bugs to <malapert (at) i3s (dot) unice (dot) com>."
+Report bugs to <arnaud (dot) malapert (at) unice (dot) com>."
+EOF
 }
 
 #--------------------------------------------------------------------

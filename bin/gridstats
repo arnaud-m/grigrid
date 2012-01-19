@@ -79,20 +79,22 @@ source('~/.grigrid/libgrigrid.m');
 ##--------------------------------------------------------------------
 ## Do something
 ##--------------------------------------------------------------------
-labelFormat="%-12s |%8s |%12s |%12s |%8s |%8s\n";
-rowFormat="%-12s |%8i |%12.1f |%12.1f |%8i |%8i\n";
+labelFormat="%-12s |%8s |%12s |%12s |%8s |%8s|%8s|%8s\n";
+rowFormat="%-12s |%8i |%12.1f |%12.1f |%8i |%8i|%8i|%8i\n";
 
 totalTime=0;
 args=argv();
 cpt=0;
 ##Loop over result files and generate gnuplot data
-printf(labelFormat, "Algorithm", "#OPT_CP", "mean(t)", "mean(#bck)", "#OPT_H", "#SAT")
+printf(labelFormat, "Algorithm", "#OPT_CP", "mean(t)", "mean(#bck)", "#OPT_H", "#SAT", "#UNSAT", "#UNKNOWN")
 for i = 1:nargin
   M=fread(args{i});
   O= findOPT(M);
   OCP= findOPT_CP( O, M);
   SAT=findSAT(M);
-  printf(rowFormat, basename(args{i}), length(OCP), mean(M(OCP, TIME)), mean(M(OCP, BCK)), length(O) - length(OCP), length(SAT))
+  UNSAT=findUNSAT(M);
+  UNKNOWN=findUNKNOWN(M);
+  printf(rowFormat, basename(args{i}), length(OCP), mean(M(OCP, TIME)), mean(M(OCP, BCK)), length(O) - length(OCP), length(SAT), length(UNSAT), length(UNKNOWN));
   totalTime += sum(M(:,TIME)) ;
 endfor
 disp(sprintDuration(totalTime))

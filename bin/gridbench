@@ -18,16 +18,18 @@
 
 PROG=`basename $0 .sh`
 version() {
-
-    echo  "$PROG 0.1
+cat <<EOF
+$PROG 0.1
      
 Copyright (C) 2011 Arnaud Malapert.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law."
+EOF
 }
 
 help() {
-echo "$PROG copies a SOURCE directory and optionally multiple FILE(s), into a non-existing benchmark directory BENCH. \
+cat <<EOF
+$PROG copies a SOURCE directory and optionally multiple FILE(s), into a non-existing benchmark directory BENCH. \
 FILE(s) are copied into each sub-directory of SOURCE.  The copy process create hard links.
 
 Usage: $PROG [OPTION] SOURCE BENCH [FILE]...
@@ -37,6 +39,7 @@ Options:
   --version     output version information and exit
 
 Report bugs to <malapert (at) i3s (dot) unice (dot) fr>."
+EOF
 }
 
 #--------------------------------------------------------------------

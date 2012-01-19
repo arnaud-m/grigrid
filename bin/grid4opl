@@ -13,21 +13,25 @@
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#     along with this program.  If not, see <http://ww.gnu.org/licenses/>.
 ###################################################
 
 PROG=`basename $0 .sh`
 version() {
 
-    echo  "$PROG 0.1
-     
+    cat <<EOF  
+$PROG 0.1
 Copyright (C) 2011 Arnaud Malapert.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law."
+This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+     
+Written by A. Malapert."
+EOF
 }
 
 help() {
-echo "$PROG does nothing interesting except serve as an example for help2man.
+cat <<EOF
+$PROG does nothing interesting except serve as an example for help2man.
      
 Usage: $PROG [OPTION]...
      
@@ -43,7 +47,8 @@ Examples:
   foo               do nothing
   foo --option      the same thing, giving --option
      
-Report bugs to <malapert (at) i3s (dot) unice (dot) fr>."
+Report bugs to <arnaud (dot) malapert (at) unice (dot) fr>."
+EOF
 }
 
 #--------------------------------------------------------------------
