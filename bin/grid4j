@@ -19,55 +19,81 @@
 PROG=`basename $0 .sh`
 version() {
 
-    echo  "$PROG 0.1
+cat << EOF
+$PROG 0.1
      
 Copyright (C) 2011 Arnaud Malapert.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law."
+This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+EOF
 }
 
 help() {
-echo "$PROG deploys a benchmark for a java solver in the current directory.
-The directory DIR describes the structure of the benchmark.
-The directory 'instances' contains all benchmark instances.
-A set of properties file describes the different configurations of the solver.
+cat << EOF
+$PROG deploys a benchmark for a java solver in the current directory.
+The directory DIR describes the structure of the benchmark. The directory 'instances' contains all benchmark instances. A set of properties file describes the different configurations of the solver.
 A jar file contains an executable solver which accepts at least two parameters : -p property ; -f file. 
-The deploiement occurs only when the filename of an instance matches the regular expression PATTERN. 
+The deployement occurs only when the filename of an instance matches the regular expression PATTERN. 
 
 Usage: $PROG [OPTION]... DIR PATTERN...
      
 Options:
-  --help        display this help and exit
-  --version     output version information and exit
+  -j options       pass options to jvm            
+  -p options      pass options to the java program
+  -d      activate the headless jvm option
+
+  -h      display this help and exit
+  -v      output version information and exit
      
 Examples:
 $PROG ./ '*.txt' 
      
-Report bugs to <malapert (at) i3s (dot) unice (dot) fr>."
+Report bugs to < arnaud (dot) malapert (at) unice (dot) fr>."
+EOF
 }
 
 #--------------------------------------------------------------------
 # Setup Global Variables
 #--------------------------------------------------------------------
 
-INST="./instances" #the sub-directory of $DIR which contains all instance files
-JAVA_OPTIONS="-server -Xms512m -Xmx1024m"
-SOLVER_OPTIONS="-v QUIET"
+INST="instances" #the sub-directory of $DIR which contains all instance files
+HEADLESS_OPTION=
+JVM_OPTIONS="-server -Xms512m -Xmx1024m"
+PROGRAM_OPTIONS="-v QUIET"
+
 #--------------------------------------------------------------------
 # Test for prerequisites
 #--------------------------------------------------------------------
 
-if [ $# -eq 0 ] ||  [ $1 = "--help" ]; then
-    help
-    exit 0
-elif [ $1 = "--version" ]; then
-    version
-    exit 0
-elif  [ $1 = "-h" ] || [ $1 = "--headless" ] ; then
-JAVA_OPTIONS="$JAVA_OPTIONS -Djava.awt.headless=true"
-shift;
-fi 
 
+while getopts “hvdj:p:” OPTION
+do
+    case $OPTION in
+        h)
+	    help
+	    exit
+            ;;
+	v)
+	    version
+	    exit
+            ;;
+        d)
+	    HEADLESS_OPTION="-Djava.awt.headless=true";
+            ;;
+        j)
+             JVM_OPTIONS=$OPTARG
+             ;;
+         p)
+            PROGRAM_OPTIONS=$OPTARG
+            ;;
+         ?)
+             help
+             exit 1
+             ;;
+     esac
+done
+
+shift $(($OPTIND - 1))
 if [ $# -lt 2 ] ; then
     help
     exit 1;
@@ -88,7 +114,7 @@ if [  -d $1 ]; then
 	    CDIR=${PROP/%.properties/} #remove the extension
 	    gridbench $INST $CDIR $PROP $JAR #create benchmark directories
 	    for PATTERN in "$@" ; do 
-	    gridjobs $CDIR "$PATTERN" "java $JAVA_OPTIONS  -jar $JAR   $SOLVER_OPTIONS -p $PROP -f {}" #create benchmarking shell scripts
+	    gridjobs $CDIR "$PATTERN" "java $JVM_OPTIONS $HEADLESS_OPTION -jar $JAR   $PROGRAM_OPTIONS -p $PROP -f {}" #create benchmarking shell scripts
 	    done
 	done
     else
