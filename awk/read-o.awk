@@ -5,10 +5,10 @@ BEGIN {
 }
 {
     if (/^c (MINIMIZE|MAXIMIZE) /) {
-	tab[0] = $3;
+	tab[0] = $4;
     }
     else if (/^c CSP[ \t]*(FIRST_SOLUTION|ALL_SOLUTIONS) /) {
-	tab[0] = $4;
+	tab[0] = $5;
     }
     else if (/^s UNSUPPORTED[ \t]*$/) {
 	tab[1] = -1; 
