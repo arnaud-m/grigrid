@@ -13,41 +13,39 @@
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with this program.  If not, see <http://ww.gnu.org/licenses/>.
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################
 
 PROG=`basename $0 .sh`
 version() {
 
-    cat <<EOF  
+cat << EOF
 $PROG 0.1
+     
 Copyright (C) 2011 Arnaud Malapert.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
-     
-Written by A. Malapert."
 EOF
 }
 
 help() {
-cat <<EOF
-$PROG does nothing interesting except serve as an example for help2man.
-     
-Usage: $PROG [OPTION]...
+cat << EOF
+$PROG deploys a benchmark for a CPLEX solver (OPL) in the current directory.
+The directory DIR describes the structure of the benchmark. The directory 'instances' contains all benchmark instances. A set of model files .mod are solved by the oplrun command.
+Common model files must be named *-common.mod. The deployement occurs only when the filename of an instance matches the regular expression PATTERN. 
+
+Usage: $PROG [OPTION]... DIR PATTERN...
      
 Options:
-  -a, --option      an option
-  -b, --another-option[=VALUE]
-                         another option
-     
-  --help        display this help and exit
-  --version     output version information and exit
+  -p options      pass options to the oplrun program
+  
+  -h      display this help and exit
+  -v      output version information and exit
      
 Examples:
-  foo               do nothing
-  foo --option      the same thing, giving --option
+$PROG ./ '*.txt' 
      
-Report bugs to <arnaud (dot) malapert (at) unice (dot) fr>."
+Report bugs to < arnaud (dot) malapert (at) unice (dot) fr>."
 EOF
 }
 
@@ -55,17 +53,39 @@ EOF
 # Setup Global Variables
 #--------------------------------------------------------------------
 
+INST="instances" #the sub-directory of $DIR which contains all instance files
+PROGRAM_OPTIONS="-deploy -w"
 
 #--------------------------------------------------------------------
 # Test for prerequisites
 #--------------------------------------------------------------------
 
-if [ $1 = "--help" ]; then
+
+while getopts “hvdj:p:” OPTION
+do
+    case $OPTION in
+        h)
+	    help
+	    exit
+            ;;
+	v)
+	    version
+	    exit
+            ;;
+        p)
+            PROGRAM_OPTIONS=$OPTARG
+            ;;
+         ?)
+             help
+             exit 1
+             ;;
+     esac
+done
+
+shift $(($OPTIND - 1))
+if [ $# -lt 2 ] ; then
     help
-    exit 0
-elif [ $1 = "--version" ]; then
-    version
-    exit 0
+    exit 1;
 fi
 
 
@@ -73,5 +93,25 @@ fi
 # Do something
 #--------------------------------------------------------------------
 
+if [  -d $1 ]; then
+    DIR=$1;
+    shift;
+    cd $DIR;
+    if [ -d $INST ]; then
+	COMMON=`ls *\-common.mod`
+	MODELS=`ls  *.mod | grep -v '\-common.mod$'`
+        for MOD in $MODELS; do
+	    CDIR=${MOD/%.mod/} #remove the extension
+	    gridbench $INST $CDIR $COMMON $MOD #create benchmark directories
+	    for PATTERN in "$@" ; do 
+	    gridjobs $CDIR "$PATTERN" "oplrun $PROGRAM_OPTIONS $MOD {}" #create benchmarking shell scripts
+	    done
+	done
+    else
+	echo "$INST is not a directory."
+    fi
+else
+    echo "$1 is not a directory."
+fi
 
 

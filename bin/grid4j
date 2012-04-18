@@ -106,8 +106,8 @@ fi
 
 if [  -d $1 ]; then
     DIR=$1;
-    cd $DIR;
     shift;
+    cd $DIR;
     if [ -d $INST ]; then
 	JAR=`ls *.jar` #a single jar file
 	for PROP in `ls *.properties`; do
