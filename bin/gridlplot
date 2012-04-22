@@ -81,10 +81,7 @@ if( nargin > 0)
     exit(0);
   elseif(strcmp(args{1},"--bck"))
     arg_offset = 2;
-    elseif(strcmp(args{1},"--ilb"))
-    arg_offset = 2;
-  endif
-  endif
+s  endif
 endif
 
 if(nargin - arg_offset + 1 <2)
