@@ -85,7 +85,7 @@ for DIR in "$@" ; do
 		echo "sequential execution $DIR  [OK]";;
 	    2) 	find $DIR  -name '*.sh' -print0 | xargs -0 cat  | sed '/^#!/d';
 		echo "print qsub commands of $DIR  [OK]";;	
-	    *)  find $DIR  -name '*.sh' -execdir qsub {} \; 
+	    *)  find $DIR  -name '*.sh' -execdir qsub -z {} \; 
 		echo "qsub $DIR  [OK]";
 	esac
     else
