@@ -1,5 +1,5 @@
 #!/usr/bin/awk -f
-#Instance~|Status~|Obj~|Init. Obj.~|LB~|Init. LB~|#Sol.~|Time(s)~|#Nodes~|#Backtracks
+#Instance~|Status~|Obj~|Init. Obj.~|LB~|Init. LB~|#Sol.~|Time(s)~|#Nodes~|#Backtracks|ILB Gap
 BEGIN {
   tab[1] = -2;
 }
@@ -52,10 +52,13 @@ BEGIN {
     else if (/^d BACKTRACKS /) {
 	tab[9] = $3;
     }
+    else if (/^d ILB_GAP /) {
+	tab[10] = $3;
+    }
 }
 
 END {
     printf tab[0];
-    for (x = 1; x <= 9; x++) {
+    for (x = 1; x <= 10; x++) {
 	printf " ~|%s", tab[x]}
 }

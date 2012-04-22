@@ -45,10 +45,10 @@ function _help()
   disp("\n\nReport bugs to <arnaud (dot) malapert (at) unice (dot) fr>.");
  endfunction
 
-function R=computeOptTime(M)
-  global TIME;
+ 
+function R=computeOptInLess(M, crit_index)
   n= size(M,1);
-  V=sort(M( findOPT(M), TIME));
+  V=sort(M( findOPT(M), crit_index));
   R = [];
   len = length(V);
   if(len>0)       
@@ -69,7 +69,9 @@ endfunction
 ## Test for prerequisites
 ##--------------------------------------------------------------------
 
+    
 args = argv ();
+arg_offset = 1;
 if( nargin > 0)
   if(strcmp(args{1},"--version"))
     _version();
@@ -77,28 +79,42 @@ if( nargin > 0)
   elseif(strcmp(args{1},"--help"))
     _help();
     exit(0);
+  elseif(strcmp(args{1},"--bck"))
+    arg_offset = 2;
+    elseif(strcmp(args{1},"--ilb"))
+    arg_offset = 2;
+  endif
   endif
 endif
 
-if(nargin<2)
+if(nargin - arg_offset + 1 <2)
   _help();
-  error("This octave script takes at least two arguments.");
+  error("This octave script takes at least two file arguments.");
 endif
 
 source('~/.grigrid/libgrigrid.m');
 
+if(arg_offset == 1)
+  global TIME;
+  crit_index=TIME;
+  crit_label = "Time (s)";
+else
+  global BCK;
+  crit_index=BCK;
+  crit_label = "# Backtracks";
+endif
 ##--------------------------------------------------------------------
 ## Do something
 ##--------------------------------------------------------------------
 ##Clear output file, write  header
-datafile=strcat(args{1},".dat");
+datafile=strcat(args{arg_offset},".dat");
 fid = fopen (datafile, "w");
 fprintf(fid, "%s\n", strftime(save_header_format_string,  localtime (time ())));
 
 nlines=0;
 ##Loop over result files and generate gnuplot data
-for i = 2:nargin
-  R=computeOptTime(fread(args{i}));
+for i = (arg_offset+1):nargin
+  R=computeOptInLess(fread(args{i}), crit_index);
   if( size(R, 1) > 0)  
     nlines++;
     if(nlines>1) fprintf(fid, "\n\n"); endif
@@ -114,9 +130,9 @@ printf("%i/%i curves written in %s.\n", nlines, nargin-1, datafile);
 if(nlines > 0) 
   scriptfile=strcat(args{1},".gpl");
   fid = fopen (scriptfile, "w");
-  fdisp(fid, "set title ''") 
-  fdisp(fid, "set xlabel 'Time (s)'") 
-  fdisp(fid, "set ylabel '% Optimum'")
+  fdisp(fid, "set title ''") ;
+  fdisp(fid, cstrcat("set xlabel '", crit_label, "'")); 
+  fdisp(fid, "set ylabel '% Optimum'");
   fdisp(fid, "set yrange [0:100]");
   fdisp(fid, "set logscale x");
   fdisp(fid, "set key autotitle columnheader");

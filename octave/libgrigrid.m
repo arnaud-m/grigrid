@@ -17,6 +17,7 @@ global NB_SOLS=6;
 global TIME=7;
 global NODE=8;
 global BCK=9;
+global ILB_GAP=10;
 
 global THRESHOLD=2;
 
