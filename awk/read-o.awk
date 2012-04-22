@@ -1,5 +1,5 @@
 #!/usr/bin/awk -f
-#Instance~|Status~|Obj~|Init. Obj.~|LB~|Init. LB~|#Sol.~|Time(s)~|#Nodes~|#Backtracks|ILB Gap
+#Instance~|Status~|Obj~|Init. Obj.~|LB~|Init. LB~|#Sol.~|Time(s)~|#Nodes~|#Backtracks~|ILB Gap
 BEGIN {
   tab[1] = -2;
 }
