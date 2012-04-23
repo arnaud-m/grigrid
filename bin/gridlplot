@@ -45,7 +45,26 @@ function _help()
   disp("\n\nReport bugs to <arnaud (dot) malapert (at) unice (dot) fr>.");
  endfunction
 
+
  
+function R=computeNumberLessThan(V)
+  R = [];
+  V=sort(V);
+  len = length(V);
+  if(len>0)       
+    R = [ V(1) 0];
+    idx  = 1;
+    do 
+      i = idx;
+      while( i <= len && V(idx) == V(i) )
+	i++;
+      endwhile
+      R = [R; V(idx) (i - 1)];
+      idx=i;
+    until idx > len
+  endif
+endfunction
+
 function R=computeOptInLess(M, crit_index)
   n= size(M,1);
   V=sort(M( findOPT(M), crit_index));
@@ -81,7 +100,7 @@ if( nargin > 0)
     exit(0);
   elseif(strcmp(args{1},"--bck"))
     arg_offset = 2;
-s  endif
+  endif
 endif
 
 if(nargin - arg_offset + 1 <2)
@@ -110,16 +129,38 @@ fprintf(fid, "%s\n", strftime(save_header_format_string,  localtime (time ())));
 
 nlines=0;
 ##Loop over result files and generate gnuplot data
+
+VBS = [];
 for i = (arg_offset+1):nargin
-  R=computeOptInLess(fread(args{i}), crit_index);
+  M= fread(args{i});
+  n= size(M,1);
+  OPT = findOPT(M);
+  R = ( 100 * computeNumberLessThan(M( OPT, crit_index)) ) / n;
+  #R=computeOptInLess(M, crit_index);
   if( size(R, 1) > 0)  
     nlines++;
     if(nlines>1) fprintf(fid, "\n\n"); endif
     label = substr(args{i}, 1, rindex(args{i}, '.')-1); 
     fprintf(fid, "\"\" \"%s\"\n", label);
     fprintf(fid, "%f %f\n", R') #need to transpose the matrix or change the function
-   endif
+  endif
+  ##Update VBS
+  if(length(VBS) < n)
+    VBS = [VBS ; nan( n- length(VBS),1)];
+  endif
+  VBS(OPT)=min( VBS(OPT), M( OPT, crit_index));
+  ##find(isnan(VBS))
+  pause
 endfor
+
+##Export VBS
+if( size(VBS, 1) > 0)
+  nlines++;
+  n= size(VBS,1);
+  VBS = ( 100 * computeNumberLessThan(VBS( find(! isnan(VBS)) ))) / n;
+  fprintf(fid, "\n\n\"\" \"%s\"\n", "VBS");
+  fprintf(fid, "%f %f\n", VBS') #need to transpose the matrix or change the function
+  endif
 fclose (fid);
 printf("%i/%i curves written in %s.\n", nlines, nargin-1, datafile);
 
