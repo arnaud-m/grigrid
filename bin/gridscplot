@@ -87,6 +87,10 @@ for i = 1:nargin
     OS=setdiff(O1,O2); #optimums found only by the first solver
     SO=setdiff(O2,O1); #optimums found only by the second solver
     OO=intersect(O1,O2);  #optimums found by both solvers
+
+    printf("Optimums found by solver %s and %s: %d\n", args{i}, args{j}, length(OO));
+    printf("Optimums only found by solver %s: %d\n", args{i}, length(OS));
+    printf("Optimums only found by solver %s: %d\n\n", args{j}, length(SO));
     
     T1=find(M1(OO,TIME) >=THRESHOLD);
     ##optimums found by both solvers in more than THRESHOLD seconds

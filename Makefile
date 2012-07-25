@@ -58,7 +58,7 @@ test : test-clean;
 	cd $(testdir); ./test-grid4j.sh;
 
 test-clean : ;
-#keep on a single line to preserve the cd command
+	#keep on a single line to preserve the cd command
 	cd $(testdir); rm -f *.tar.gz *.log *.res *.dat *.gpl; rm -fr F__TB B__TB;
 
 dist-clean : ;

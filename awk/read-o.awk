@@ -60,5 +60,6 @@ BEGIN {
 END {
     printf tab[0];
     for (x = 1; x <= 10; x++) {
-	printf " ~|%s", tab[x]}
+	printf " ~|%s", tab[x]
+    }
 }
