@@ -1,5 +1,5 @@
 #!/usr/bin/awk -f
-#Instance~|Status~|Obj~|Init. Obj.~|LB~|Init. LB~|#Sol.~|Time(s)~|#Nodes~|#Backtracks|ILB Gap
+#Instance~|Status~|Obj~|Init. Obj.~|LB~|Init. LB~|#Sol.~|Time(s)~|#Nodes~|#Backtracks~|ILB Gap
 BEGIN {
   tab[1] = -2;
 }
@@ -43,7 +43,7 @@ BEGIN {
     else if (/^d NBSOLS /) {
 	tab[6] = $3;
     }
-    else if (/^d RUNTIME /) {
+    else if (/^d (RUN)?TIME /) {
 	tab[7] = $3;
     }
     else if (/^d NODES /) {
