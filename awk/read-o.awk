@@ -13,13 +13,13 @@ BEGIN {
     else if (/^s UNSUPPORTED[ \t]*$/) {
 	tab[1] = -1; 
     } 
-    else if (/^s SATISFIABLE[ \t]*$/) {
+    else if (/^s SAT(ISFIABLE)?[ \t]*$/) {
 	tab[1] = 0;
     }
     else if (/^s OPTIMUM(_FOUND)?[ \t]*$/) {
 	tab[1] = 1;
     }
-    else if (/^s UNSATISFIABLE[ \t]*$/) {
+    else if (/^s UNSAT(ISFIABLE)?[ \t]*$/) {
 	tab[1] = 2;
     }
     else if (/^s UNKNOWN[ \t]*$/) {

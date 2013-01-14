@@ -109,7 +109,7 @@ do
        #generate .res
 	echo "generate results file ..."
 	#summarize results 
-	find $DIR -type f -name *.o -execdir $AWK_CMD  --source 'END{print "";}' '{}' \;  | sort | sed  "1i$HEADER"  |  column -s '~' -t > $FNAME.res
+	find $DIR -type f -name '*.o' -execdir $AWK_CMD  --source 'END{print "";}' '{}' \;  | sort | sed  "1i$HEADER"  |  column -s '~' -t > $FNAME.res
 	echo "generate results $DIR [OK]" 
     else
 	echo "generate results $DIR [FAIL]" 
