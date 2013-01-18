@@ -103,9 +103,9 @@ do
 	FNAME=`basename $(readlink -nf $DIR)`
 	TAR=$FNAME-o.tar.gz
         echo "compress files .o ..."
-       	find $DIR -name \*.o | xargs tar czf $TAR $DIR/*.properties
+       	find $DIR -name '*.o' | xargs tar czf $TAR $DIR/*.properties
         echo "generate error log ..."
- 	find $DIR  -name *.e  -print0 | xargs -0 cat > $FNAME-e.log
+ 	find $DIR  -name '*.e'  -print0 | xargs -0 cat > $FNAME-e.log
        #generate .res
 	echo "generate results file ..."
 	#summarize results 
