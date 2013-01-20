@@ -1,0 +1,52 @@
+#!/usr/bin/python
+##########################
+# Author: A. Malapert                                    #
+# Version: 0.0.1                                               #
+# Licence: GPL                                                #
+##########################
+
+
+
+##########################
+# Import of external classes and functions
+
+
+#import argparse
+#import subprocess
+import commands
+import sys
+
+##########################
+# Definition of a main procedure 
+if __name__ == "__main__":
+    
+    # Parse command line
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("-v", "--verbosity", help="increase output verbosity", action="store_true")
+    # parser.add_argument('file', nargs='+',help="input file")
+    # args=parser.parse_args()
+        
+    #Loop over files
+    hosts={}
+    del sys.argv[0] ##progam name
+    for filename in sys.argv:
+        #if args.verbosity:
+        print 'Processing %s:' %filename,
+        #host=subprocess.check_output(['sed', '-n', '5 s/Job was executed on host(s) <\([^>]*\)>.*/\\1/ p',filename]).strip()
+        host=commands.getstatusoutput("%s %s" % ("sed -n '5 s/Job was executed on host(s) <\([^>]*\)>.*/\\1/ p'",filename))[1]
+        print host
+        if host in hosts:
+            hosts[host]+=1
+        else:
+            hosts[host]=1
+    print '%d host(s): '%len(hosts),       
+    print hosts
+        
+
+   
+    
+
+    
+
+
+
