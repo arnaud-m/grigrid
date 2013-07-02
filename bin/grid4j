@@ -47,7 +47,8 @@ Options:
      
 Examples:
 $PROG ./ '*.txt' 
-     
+
+$PROG -j '-server -Xms512m -Xmx1024m' -p ' -t EBTRIP -v QUIET' . 'n*.txt'
 Report bugs to < arnaud (dot) malapert (at) unice (dot) fr>."
 EOF
 }

@@ -13,38 +13,44 @@
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#     along with this program.  If not, see <http://ww.gnu.org/licenses/>.
 ###################################################
 
 PROG=`basename $0 .sh`
 version() {
-cat <<EOF
+
+    cat <<EOF  
 $PROG 0.1
-     
 Copyright (C) 2011 Arnaud Malapert.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+     
+Written by A. Malapert."
 EOF
 }
 
 help() {
 cat <<EOF
-$PROG recursively searches shell scripts in directories BENCH(s), and submits them to a batch server.
-
-Usage: $PROG [OPTION].. BENCH...
+$PROG does nothing interesting except serve as an example for help2man.
+     
+Usage: $PROG [OPTION] CURRENT ABSOLUTE
      
 Options:
-  -s. --sequential      sequential submission on localhost. 
-  -p, --print              only print submission requests.
-  --silent                  silent submission.  
- 
- --help         display this help and exit
---version     output version information and exit
+  -a, --option      an option
+  -b, --another-option[=VALUE]
+                         another option
+     
+  --help        display this help and exit
+  --version     output version information and exit
+     
+Examples:
+  foo               do nothing
+  foo --option      the same thing, giving --option
      
 Report bugs to <arnaud (dot) malapert (at) unice (dot) fr>."
 EOF
 }
-2
+
 #--------------------------------------------------------------------
 # Setup Global Variables
 #--------------------------------------------------------------------
@@ -54,7 +60,7 @@ EOF
 # Test for prerequisites
 #--------------------------------------------------------------------
 
-if [ $# -eq 0 ] || [ $1 = "--help" ]; then
+if [ $1 = "--help" ]; then
     help
     exit 0
 elif [ $1 = "--version" ]; then
@@ -67,30 +73,14 @@ fi
 # Do something
 #--------------------------------------------------------------------
 
-
-if [ $1 = "-s" ] || [ $1 = "--sequential" ] ; then
-    SUBT=1;
-    shift
-elif [ $1 = "-p" ] || [ $1 = "--print" ] ; then
-    SUBT=2;
-    shift
-else
-    SUBT=0;
-fi
-
-for DIR in "$@" ; do 
-    if [ -d $DIR ] ; then
-	echo "entering in $DIR ..."
-	case $SUBT in 
-	    1) find $DIR  -name '*.sh' -execdir sh -c '{}  > {}.o 2> {}.e' \; ; ##need to start a new shell for valid redirection
-		echo "sequential execution $DIR  [OK]";;
-	    2) 	find $DIR  -name '*.sh' -print0 | xargs -0 cat  | sed '/^#!/d';
-		echo "print qsub commands of $DIR  [OK]";;	
-	    *)  find $DIR  -name '*.sh' -execdir qsub -z {} \; 
-		echo "qsub $DIR  [OK]";
-	esac
-    else
-	echo "qsub $DIR  [FAIL]"	
-    fi
-done
-
+#http://stackoverflow.com/questions/2564634/bash-convert-absolute-path-into-relative-path-given-a-current-directory
+# both $1 and $2 are paths
+# returns $2 relative to $1
+absolute=`readlink -f "$2"`
+current=`readlink -f "$1"`
+echo "$absolute\n"
+echo "$current\n"
+# Perl is magic
+# Quoting horror.... spaces cause problems, that's why we need the extra " in here:
+relative=$(perl -MFile::Spec -e 'print File::Spec->abs2rel("'"$absolute"'","'"$current"'")')
+echo $relative
