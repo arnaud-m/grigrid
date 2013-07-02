@@ -1,0 +1,164 @@
+#+SETUPFILE: ~/.emacs.d/org-templates/base.org
+#+TITLE: Selection of benchmark instances for parallel CP solvers
+#+OPTIONS: skip:nil 
+#+begin_latex
+  \hypersetup{% Setup for hyperref
+  pdftitle    = {{{{TITLE}}}}, %Org macro to take from #+TITLE
+  pdfauthor   = {{{{AUTHOR}}}} %Org macro to take from #+AUTHOR
+  }
+#+end_late
+* Tasks 							   
+#:CATEGORY: grigrid
+* Solver : problem solving program
+** Problems and Categories
+*** Problems
+   There are three problems:
+  1. SP : satisfaction problem;
+  2. EP : enumeration problem;
+  3. OP : optimization problem
+*** Categories
+The solver categories are:
+1. complete
+2. incomplete
+
+Complete solvers can determine if an instance is satisfiable or not (or find and prove the optimum) whereas incomplete solvers cannot prove the unsatisfiability or the optimum.
+** Execution Environment
+ Solvers will run on a cluster of computers using the Linux operating system. 
+They will run under the control of another program (runsolver) which will enforce some limits on the memory and the total CPU time used by the program. 
+Solvers will be run inside a sandbox that will prevent unauthorised use of the system (network connections, file creation outside the allowed directory, among others). 
+Two executions of a solver with the same parameters and system resources must output the same result in approximately the same time (so that the experiments can be repeated).
+
+You need to provide grigrid with a suggested command line that should be used to run your solver. 
+In this command line, you will be asked to use the following placeholders, which will be replaced by the actual information given by the evaluation environment.
+ - BENCHPATH:
+ - BENCHNAME:
+    will be replaced by the name of the file containing the instance to solve (including the path to the file). Obviously, the solver must use this parameter.
+ - ALGOPATH:
+    will be replaced by the name of the file containing the instance to solve (including the path to the file). Obviously, the solver must use this parameter.
+ - RANDOMSEED:
+    will be replaced by a random seed which is a number between 0 and $ 4,294,967,295$. This parameter MUST be used to initialise the random number generator when the solver uses random numbers. It is recorded by the evaluation environment and will allow to run the program on a given instance under the same conditions if necessary. 
+ - TMPDIR:
+    is the name of the only directory where the solver is allowed to read/write temporary files. 
+
+Examples of command lines:
+ 
+
+The solver cannot write to any file except standard output, standard error and files in the TMPDIR directory. 
+Solvers can use several processes or threads. 
+** Output Rules
+
+ The evaluation environment records everything that is output by your solver on stdout/stderr (up to a limit of 1MiB) and is able to timestamp each line. 
+This can be very informative to check how your solvers behaved on some instances.
+
+Therefore solvers must output messages to the standard output and those messages will be used to check the results. 
+The output format is inspired by the DIMACS output specification of the SAT competition and can be used to manually check some results. 
+Lines output by the solver should be prefixed by 'c ', 's ', 'v ', 'd ' or 'o '. 
+Lines which do not start with one of these prefixes are considered as comment lines and are ignored. 
+The meaning of these prefixes is detailed below. 
+*** Lines
+ There exist 5 different types of lines. They are defined as follows:
+**** solution ('s ' line)
+    These lines are mandatory and start with the two following characters: lower case s followed by a space (ASCII code 32). 
+    These two characters are followed by one of the following answers:
+     - UNSUPPORTED: for all categories.
+     - SAT: for all categories.
+     - UNSAT: for all categories.
+     - UNKNOWN: for all categories.
+     - OPTIMUM: for optimization.
+     - ALL: for enumeration.
+
+    It is of utmost importance to respect the exact spelling of these answers. 
+    Any mistake in the writing of these lines will cause the answer to be disregarded. 
+    Solvers are not required to provide any specific exit code corresponding to their answer.
+    
+**** values ('v ' line)
+    These lines start with the two following characters: lower case v followed by a space (ASCII code 32) and followed by a solution of the problem.
+**** diagnostic ('d ' line)
+
+    These lines are optional and start with the two following characters: lower case d followed by a space (ASCII code 32). 
+    Then, a keyword followed by a value must be given on this line. See section 7.4 for details about the diagnostics.
+
+**** comment ('c ' line)
+    Such lines are optional and start with the two following characters: lower case c followed by a space (ASCII code 32). 
+    These lines are optional and may appear anywhere in the solver output. 
+    They contain any information that authors want to output. 
+    They are recorded by the evaluation environment for later viewing but are otherwise ignored. 
+    Submitters are advised to avoid outputting comment lines which may be useful in an interactive environment but otherwise useless in a batch environment. 
+    For example, outputting comment lines with the number of constraints read so far only increases the size of the logs with no benefit.
+
+**** objective cost ('o ' line) (for optimization only)
+
+    These lines start with the two following characters: lower case o followed by a space (ASCII code 32). These two characters are followed by one integer.
+
+**** Important remarks
+Don't forget to flush the output as soon as you have printed a 's ' line or a 'v ' line. 
+
+*** Specific rules for satisfaction solvers
+
+    A CSP solver must output exactly one 's ' line.
+    These lines are not necessarily the first ones in the output since the CSP solver can output some 'c ' and 'd ' lines in any order. 
+
+    If the solver does not output a 's ' line, or if the 's ' line is misspelled, then UNKNOWN will be assumed. 
+*** Specific rules for enumaration solvers
+
+*** Specific rules for optimization solvers
+
+Since a Max-CSPor WCSP solver will not stop as soon as it finds a solution but instead will try to find a better solution, it must be given a way to output the best solution it found even when it reaches the time limit. There are two options depending on your ability to intercept signals. The first option may be used if your solver is able to catch the signal SIGTERM which will be sent by the evaluation environment at the time out and just one second before the solver is actually killed by a SIGKILL. This is the preferred option. The second option should be used when the first option is inapplicable.
+
+    You can intercept signals:
+
+    Whenever your Max-CSP or WCSP solver finds a better solution (or simply the first one) during search, it can output an 'o ' line with the current cost (number of unsatisfied constraints for Max-CSP) (these lines are not mandatory, but it is strongly advised to output them). Important: For Max-CSP, this is the number of unsatisfied constraints that must be output and not the number of satisfied constraints (as in 2006). Then, if your solver finds an optimal solution and proves its optimality (i.e., it can prove that no other assignment of the variables will provide a lower cost than this one) then it must output a 's ' line with OPTIMUM FOUND, followed by a 'v ' line containing the optimal solution. If your solver is interrupted, then it must output a 's ' line with SATISFIABLE, followed by a 'v ' line containing the best found solution (keep in mind that you have only one second to do this).
+
+    This option saves some time as the solver avoids to output a certificate for each solution it found. It only outputs a certificate for the best solution which it was able to find.
+
+    Examples of C/C++ code to intercept the SIGTERM signal are available on the PB06 web site: http://www.cril.univ-artois.fr/PB06/coding.html. Although this page gives code which is not directly suitable for the CSP competition, it should be straightforward to adapt it.
+
+    If you can't (or don't want to) catch the SIGTERM signal:
+
+    Then all you have to do is to output a 's ' line with SATISFIABLE when the first solution is found, and a certificate 'v ' line each time you find a solution which is better than the previous ones accompanied (this is mandatory) with an 'o ' line. Only the last complete certificate will be taken into account. If eventually, your solver proves that the last solution that was output is optimal, then it must output 's OPTIMUM FOUND'.
+
+Example: a Max-CSP solver (that can intercept signal) first finds a solution with $ 19$ unsatisfied constraints, then finds another solution with $ 16$ unsatisfied constraints, and finally, a solution with $ 1$ unsatisfied constraint. Some time later, it proves that no better solution exists and it outputs 's OPTIMUM FOUND' followed by the solution which only violates 1 constraint. The output of this solver will be:
+
+      o 19
+      o 16
+      o 1
+      s OPTIMUM FOUND
+      v 1 4 7 8 3 4
+
+The evaluation environment will automatically timestamp each of these lines so that it is possible to know when the solver has found a better solution and the cost of the solution. The goal is to analyse how solvers progress toward the best solution. The timestamped output will be for example:
+
+      0.57   o 19
+      1.23   o 16
+      2.7    o 1
+      10.5   s OPTIMUM FOUND
+      10.51  v 1 4 7 8 3 4
+
+The first column in this example is the time at which the line was output by the solver (expressed in seconds of wall clock time since the beginning of the program).
+
+A solver which doesn't intercept the SIGTERM signal may output for the same problem
+
+      c Got a first solution !
+      s SATISFIABLE
+      o 19
+      v 1 1 1 1 1 1
+      c Found a better solution
+      o 16
+      v 1 2 1 1 1 1
+      c Found a better solution
+      o 1
+      v 1 4 7 8 3 4
+      s OPTIMUM FOUND
+*** Diagnostics
+
+A diagnostic is a (name,value) pair which describes the work carried out by the solver. They have to be written to stdout as a 'd ' line. Each diagnostic is a line of the form 'd NAME value', where NAME is a sequence of letters describing the diagnostic, and value is a sequence of characters defining the its value.
+
+* Benchmarking directory structure
+The main directory must contain the following files and directory :
+** solver.sh
+   A shell script compatible with the execution environment.
+** Instances
+   An arborescence which contains all instances.
+** Configurations
+A flat directory which contains different configuration for the solver.
+* Benchmarking
+* Reporting
