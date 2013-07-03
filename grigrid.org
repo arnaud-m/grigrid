@@ -30,33 +30,28 @@ Two executions of a solver with the same parameters and system resources must ou
 
 You need to provide grigrid with a suggested command line that should be used to run your solver. 
 In this command line, you will be asked to use the following placeholders, which will be replaced by the actual information given by the evaluation environment.
- - BENCHPATH:
- - BENCHNAME:
-    will be replaced by the name of the file containing the instance to solve (including the path to the file). Obviously, the solver must use this parameter.
  - ALGOPATH:
+    will be replaced by the name of the file containing the instance to solve (including the path to the file). Obviously, the solver must use this parameter.
+ - BENCHPATH:
     will be replaced by the name of the file containing the instance to solve (including the path to the file). Obviously, the solver must use this parameter.
  - RANDOMSEED:
     will be replaced by a random seed which is a number between 0 and $ 4,294,967,295$. This parameter MUST be used to initialise the random number generator when the solver uses random numbers. It is recorded by the evaluation environment and will allow to run the program on a given instance under the same conditions if necessary. 
- - TMPDIR:
-    is the name of the only directory where the solver is allowed to read/write temporary files. 
 
 Examples of command lines:
- 
-
-The solver cannot write to any file except standard output, standard error and files in the TMPDIR directory. 
-Solvers can use several processes or threads. 
+ Solvers can use several processes or threads by precising oar instruction in the solver shell script. 
 ** Output Rules
 
- The evaluation environment records everything that is output by your solver on stdout/stderr (up to a limit of 1MiB) and is able to timestamp each line. 
+The evaluation environment records everything that is output by your solver on stdout/stderr (up to a limit of 1MiB) and is able to timestamp each line. 
 This can be very informative to check how your solvers behaved on some instances.
 
 Therefore solvers must output messages to the standard output and those messages will be used to check the results. 
 The output format is inspired by the DIMACS output specification of the SAT competition and can be used to manually check some results. 
-Lines output by the solver should be prefixed by 'c ', 's ', 'v ', 'd ' or 'o '. 
+Lines output by the solver should be prefixed by 'i', 's', 'o ', 'v ', 'd '. 
 Lines which do not start with one of these prefixes are considered as comment lines and are ignored. 
 The meaning of these prefixes is detailed below. 
 *** Lines
  There exist 5 different types of lines. They are defined as follows:
+**** instance ('i' line)
 **** solution ('s ' line)
     These lines are mandatory and start with the two following characters: lower case s followed by a space (ASCII code 32). 
     These two characters are followed by one of the following answers:
@@ -71,6 +66,10 @@ The meaning of these prefixes is detailed below.
     Any mistake in the writing of these lines will cause the answer to be disregarded. 
     Solvers are not required to provide any specific exit code corresponding to their answer.
     
+**** objective cost ('o ' line) (optimization only)
+
+    These lines start with the two following characters: lower case o followed by a space (ASCII code 32). These two characters are followed by one integer.
+
 **** values ('v ' line)
     These lines start with the two following characters: lower case v followed by a space (ASCII code 32) and followed by a solution of the problem.
 **** diagnostic ('d ' line)
@@ -86,18 +85,15 @@ The meaning of these prefixes is detailed below.
     Submitters are advised to avoid outputting comment lines which may be useful in an interactive environment but otherwise useless in a batch environment. 
     For example, outputting comment lines with the number of constraints read so far only increases the size of the logs with no benefit.
 
-**** objective cost ('o ' line) (for optimization only)
-
-    These lines start with the two following characters: lower case o followed by a space (ASCII code 32). These two characters are followed by one integer.
-
 **** Important remarks
 Don't forget to flush the output as soon as you have printed a 's ' line or a 'v ' line. 
 
-*** Specific rules for satisfaction solvers
+*** Diagnostics
+A diagnostic is a (name,value) pair which describes the work carried out by the solver. They have to be written to stdout as a 'd ' line. Each diagnostic is a line of the form 'd NAME value', where NAME is a sequence of letters describing the diagnostic, and value is a sequence of characters defining the its value.
 
+*** Specific rules for satisfaction solvers
     A CSP solver must output exactly one 's ' line.
     These lines are not necessarily the first ones in the output since the CSP solver can output some 'c ' and 'd ' lines in any order. 
-
     If the solver does not output a 's ' line, or if the 's ' line is misspelled, then UNKNOWN will be assumed. 
 *** Specific rules for enumaration solvers
 
@@ -148,17 +144,14 @@ A solver which doesn't intercept the SIGTERM signal may output for the same prob
       o 1
       v 1 4 7 8 3 4
       s OPTIMUM FOUND
-*** Diagnostics
-
-A diagnostic is a (name,value) pair which describes the work carried out by the solver. They have to be written to stdout as a 'd ' line. Each diagnostic is a line of the form 'd NAME value', where NAME is a sequence of letters describing the diagnostic, and value is a sequence of characters defining the its value.
 
 * Benchmarking directory structure
+* TODO Benchmarking
 The main directory must contain the following files and directory :
-** solver.sh
-   A shell script compatible with the execution environment.
-** Instances
-   An arborescence which contains all instances.
-** Configurations
-A flat directory which contains different configuration for the solver.
-* Benchmarking
-* Reporting
+ - solver.sh : A shell script compatible with the execution environment.
+ - instances : an arborescence which contains all instances.
+ - algorithms : flat directory which contains all configuration files for the solver.
+
+The script generate a new directory 'scripts' with the same directory structure as the directory instance.
+ 
+* TODO Reporting

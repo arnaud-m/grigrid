@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 name=grigrid
-version=0.1
+version=0.2
 BIN=$(wildcard bin/*)
 MAN=$(BIN:bin/%=man/%.1)
 
@@ -28,7 +28,7 @@ initdirs : dist-clean;
 	mkdir $(mandir) $(docdir)
 
 man/%.1 : bin/% 
-	help2man --no-info $< -o $@
+	help2man -v -v -h -h --no-discard-stderr --no-info $< -o $@
 
 $(manpages) : $(MAN) ;
 	groff -Tps -mandoc $^ | ps2pdf  - $@
@@ -57,9 +57,9 @@ reinstall : dist-clean dist install;
 test : test-clean; 
 	cd $(testdir); ./test-grid4j.sh;
 
+#keep on a single line to preserve the cd command	
 test-clean : ;
-	#keep on a single line to preserve the cd command
-	cd $(testdir); rm -f *.tar.gz *.log *.res *.dat *.gpl; rm -fr F__TB B__TB;
+	cd $(testdir); rm -f *.tar.gz *.log ; rm -fr results;
 
 dist-clean : ;
 	rm -fr $(mandir) $(docdir) 

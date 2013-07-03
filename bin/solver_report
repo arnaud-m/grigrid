@@ -1,7 +1,7 @@
 #!/usr/bin/python
 ##########################
 # Author: A. Malapert                                    #
-# Version: 0.0.1                                               #
+# Version: 0.1                                                  #
 # Licence: GPL                                                #
 ##########################
 
@@ -69,16 +69,17 @@ if __name__ == "__main__":
 Copyright (C) 2011 Arnaud Malapert (UNS CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 
-This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.''')
+Written by A Malapert
+''')
         );
-    parser.add_argument('--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument("-v", "--verbosity", help="increase verbosity", action="store_true")
+    parser.add_argument('-v','--version', action='version', version='%(prog)s 0.1')
+    parser.add_argument('--verbose', action='store_true',help="increase verbosity")
     parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file containing the keys for log files.",required=True) 
     parser.add_argument('-i', '--input', type=argparse.FileType('r'),nargs='+',help="log files of solvers",required=True)
     parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)") 
     args=parser.parse_args()
 
-    if args.verbosity:
+    if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
     ## Read keys from a file

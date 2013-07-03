@@ -57,27 +57,20 @@ EOF
 # Setup Global Variables
 #--------------------------------------------------------------------
 
-CORE_AWK=~/.grigrid/read-o.awk
-
+RESULTS=results
+DEPTH=1
+REPORT='solver_report -k ../python/keys.txt'
 #--------------------------------------------------------------------
 # Test for prerequisites
 #--------------------------------------------------------------------
 
 
-if [ $# -eq 0 ] || [ $1 = "--help" ]; then
+if [ $# -eq 0 ] || [ $1 = "-h" ]; then
     help
     exit 0
-elif [ $1 = "--version" ]; then
+elif [ $1 = "-v" ]; then
     version
     exit 0
-elif [ $1 = "-a" ] || [ $1 = "--awk" ]; then
-    if [ -f $2 ]; then
-	USER_AWK=$2;   
-	echo "awk user script: $USER_AWK."
-    else
-	echo "awk script ignored: $2."
-    fi  
-    shift 2
 fi
 
 
@@ -85,35 +78,44 @@ fi
 # Do something
 #--------------------------------------------------------------------
 
-#create header of result files and awk command 
-AWK_CMD="awk  -f $CORE_AWK"
-if [ $USER_AWK ]; then
-    AWK_CMD="$AWK_CMD  -f $USER_AWK"
-    HEADER=`sed -n 2p $USER_AWK`
-    HEADER=${HEADER:1}
-fi
 
-HEADER=`sed -n 2p $CORE_AWK`$HEADER
+
+ find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
+do
+RESFILE=$RESDIR'.res'
+echo $RESFILE
+find $RESDIR  -type f -name '*.o'  | xargs $REPORT  -o $RESFILE -i 
+done
+
+#find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  | xargs echo
+# RESFILE=$RESULTS/uncategorized.res
+# echo $RESFILE
+
+# TODO zip .o and .res
+# echo "compress files .o ..."
+# find $RESULTS/* -name '*.o' | xargs tar czf o-files.tar.gz 
+# echo "compress files .res ..."
+# find $RESULTS/* -name '*.res' | xargs tar czf res-files.tar.gz 
+
 
 #Read directories
-for DIR in "$@" 
-do 
-    if [ -d $DIR ] ;	then
-	echo "entering in $DIR"
-	FNAME=`basename $(readlink -nf $DIR)`
-	TAR=$FNAME-o.tar.gz
-        echo "compress files .o ..."
-       	find $DIR -name '*.o' | xargs tar czf $TAR $DIR/*.properties
-        echo "generate error log ..."
- 	find $DIR  -name '*.e'  -print0 | xargs -0 cat > $FNAME-e.log
-       #generate .res
-	echo "generate results file ..."
-	#summarize results 
-	find $DIR -type f -name '*.o' -execdir $AWK_CMD  --source 'END{print "";}' '{}' \;  | sort | sed  "1i$HEADER"  |  column -s '~' -t > $FNAME.res
-	echo "generate results $DIR [OK]" 
-    else
-	echo "generate results $DIR [FAIL]" 
-    fi
-done
+# for DIR in "$@" 
+# do 
+#     if [ -d $DIR ] ;	then
+# 	echo "entering in $DIR"
+# 	FNAME=`basename $(readlink -nf $DIR)`
+# 	TAR=$FNAME-o.tar.gz
+#         echo "compress files .o ..."
+#        	find $DIR -name '*.o' | xargs tar czf $TAR $DIR/*.properties
+#         echo "generate error log ..."
+#  	find $DIR  -name '*.e'  -print0 | xargs -0 cat > $FNAME-e.log
+#        #generate .res
+# 	echo "generate results file ..."
+# 	#summarize results 
+# 	find $DIR -type f -name '*.o' -execdir $AWK_CMD  --source 'END{print "";}' '{}' \;  | sort | sed  "1i$HEADER"  |  column -s '~' -t > $FNAME.res# 	echo "generate results $DIR [OK]" 
+#     else
+# 	echo "generate results $DIR [FAIL]" 
+#     fi
+#done
 
 

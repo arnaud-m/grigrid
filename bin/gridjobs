@@ -23,7 +23,6 @@ $PROG 0.1
      
 Copyright (C) 2011 Arnaud Malapert.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law."
 EOF
 }
 
@@ -52,49 +51,87 @@ EOF
 # Setup Global Variables
 #--------------------------------------------------------------------
 
+ALGORITHMS=algorithms
+INSTANCES=instances
+RESULTS=results
+SOLVER=./solver.sh;
 
+ERRFILE=oar-stderr.log
+
+RANDOMSEED=$$
+
+PATTERN='*.txt'
 #--------------------------------------------------------------------
 # Test for prerequisites
 #--------------------------------------------------------------------
 
 
-if [ $# -eq 0 ] || [ $1 = "--help" ]; then
+if [ $# -eq 0 ] || [ $1 = "-h" ]; then
     help
     exit 0
-elif [ $1 = "--version" ]; then
+elif [ $1 = "-v" ]; then
     version
     exit 0
-elif [ $# -lt 3 ] ; then
-    help
-    exit 1
+# elif [ $# -lt 3 ] ; then
+#     help
+#     exit 1
 fi
 
+
+SUBT=1;
+
+# if [ $1 = "-s" ] || [ $1 = "--sequential" ] ; then
+#     SUBT=1;
+#     shift
+# elif [ $1 = "-p" ] || [ $1 = "--print" ] ; then
+#     SUBT=2;
+#     shift
+# else
+#     SUBT=0;
+# fi
 
 #--------------------------------------------------------------------
 # Do something
 #--------------------------------------------------------------------
 
-SOURCE=$1
-if [ -d  $SOURCE ]; then
-    shift	
-    PATTERN=$1
-    shift
-    #echo "start to generate job scripts in the directory $SOURCE ..."	
-    ##find all files matching PATTERN in the SOURCE directory
-    find  $SOURCE  -name $PATTERN -print0 | while read -d $'\0' FILE
-    ##generate a shell script for each file
-    do
-	SCRIPT="${FILE%.*}.sh" #change the extension
-	echo "#!/bin/sh" > $SCRIPT 
-        ##replace all occurence of {} in CMD by FNAME
-	FNAME=`basename $FILE`
-	CMD=`echo $*| sed "s:{}:$FNAME:g"`
-	echo $CMD >> $SCRIPT
-	chmod +x $SCRIPT
+rm -fr $RESULTS
+mkdir $RESULTS
+#####################################
+## copy instance directory struture into a temporary directory
+TMPDIR=`mktemp -d`
+find  $INSTANCES/  -type d -print0 | while read -d $'\0' FILE
+do
+    mkdir -p $TMPDIR/${FILE#$INSTANCES/}
+done
+
+###############################
+# copy instance directory struture for each algorithm
+for ALGO in `ls $ALGORITHMS` ; do
+    ALGODIR=$RESULTS/${ALGO%.*}
+    cp -a $TMPDIR $ALGODIR
+done
+
+rm -fr $TMPDIR
+
+# submit the resolution of each instance by each algorithm.
+find  $INSTANCES  -name $PATTERN -print0 | while read -d $'\0' BENCHPATH
+do
+    for ALGOPATH in `ls $ALGORITHMS/*` ; do
+        ADIR=`basename $ALGOPATH`;
+        OUTFILE=${BENCHPATH%.*}.o
+        OUTFILE=${OUTFILE#$INSTANCES/} 
+        OUTFILE=$RESULTS/${ADIR%.*}/$OUTFILE
+        ##TODO print and simulation options
+        OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S \"$SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED\""
+        case $SUBT in 
+            #serial execution
+            1) $SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED > $OUTFILE 2> $ERRFILE;;
+            ## grid execution
+            2) $OARCMD;;
+            ## debug mode (only print command)
+            *) echo $OARCMD;;
+	    esac
     done
-    echo "jobs matching $PATTERN generated in the directory $SOURCE [OK]"
-else
-    echo "$SOURCE is not a directory";
-    exit 2;
-fi
+done
+
 

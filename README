@@ -1,7 +1,7 @@
  GRIGRID 
  ------------------------------------------
 
-GRIGRID is a collection of shell scripts that eases the deployment of combinatorial benchmarks on a cluster.
+GRIGRID is a collection of shell scripts that eases the deployment of problem solving benchmarks on a cluster.
 
  REQUIREMENTS
  ------------
