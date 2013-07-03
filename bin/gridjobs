@@ -32,9 +32,7 @@ ERRFILE=oar-stderr.log
 #Option arguments
 PATTERN='*.txt'
 RANDOMSEED=$$
-SUBMODE=2;
-
-
+SUBMODE=0
 
 #--------------------------------------------------------------------
 # Version and help messages
@@ -44,7 +42,7 @@ version() {
 cat <<EOF
 $PROG 0.2
      
-Copyright (C) 2011 Arnaud Malapert.
+Copyright (C) 2011 Arnaud Malapert (UNS CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 EOF
 }
@@ -81,7 +79,7 @@ EOF
 
 
 
-while getopts ":p:s:lgdhv" opt; do
+while getopts ":p:s:gldhv" opt; do
     case $opt in
         p)
             PATTERN=$OPTARG
@@ -89,14 +87,14 @@ while getopts ":p:s:lgdhv" opt; do
         s)
             SEED=$OPTARG
             ;;
-       l)
+        g)
+            SUBMODE=0
+            ;;
+        l)
             SUBMODE=1
             ;;
-       g)
-            SUBMODE=2
-            ;;
        d)
-            SUBMODE=3
+            SUBMODE=2
             ;;
         h)
             help 
@@ -122,24 +120,29 @@ done
 # Do something
 #--------------------------------------------------------------------
 
-rm -fr $RESULTS
-mkdir $RESULTS
-#####################################
-## copy instance directory struture into a temporary directory
-TMPDIR=`mktemp -d`
-find  $INSTANCES/  -type d -print0 | while read -d $'\0' FILE
-do
-    mkdir -p $TMPDIR/${FILE#$INSTANCES/}
-done
+if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
+    rm -fr $RESULTS
+    mkdir $RESULTS
+
+# ####################################
+# copy instance directory struture into a temporary directory
+    TMPDIR=`mktemp -d`
+    find  $INSTANCES/  -type d -print0 | while read -d $'\0' FILE
+    do
+        mkdir -p $TMPDIR/${FILE#$INSTANCES/}
+    done
 
 ###############################
 # copy instance directory struture for each algorithm
-for ALGO in `ls $ALGORITHMS` ; do
-    ALGODIR=$RESULTS/${ALGO%.*}
-    cp -a $TMPDIR $ALGODIR
-done
+    for ALGO in `ls $ALGORITHMS` ; do
+        ALGODIR=$RESULTS/${ALGO%.*}
+        cp -a $TMPDIR $ALGODIR
+    done
+    
+    rm -fr $TMPDIR
+fi  
 
-rm -fr $TMPDIR
+
 
 # submit the resolution of each instance by each algorithm.
 find  $INSTANCES  -name $PATTERN -print0 | while read -d $'\0' BENCHPATH
@@ -149,13 +152,12 @@ do
         OUTFILE=${BENCHPATH%.*}.o
         OUTFILE=${OUTFILE#$INSTANCES/} 
         OUTFILE=$RESULTS/${ADIR%.*}/$OUTFILE
-        ##TODO print and simulation options
         OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S \"$SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED\""
         case $SUBMODE in 
-            #serial submission on localhost
-            1) $SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED > $OUTFILE 2> $ERRFILE;;
             ## OAR submission on a cluster
-            2) $OARCMD;;
+            0) $OARCMD;;
+           ##serial submission on localhost
+            1) $SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED > $OUTFILE 2> $ERRFILE;;
             ## debug mode (only print command)
             *) echo $OARCMD;;
 	    esac

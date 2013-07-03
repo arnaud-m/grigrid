@@ -1,6 +1,6 @@
 #!/bin/sh
 ###################################################
-#     Copyright (C) 2011 Arnaud Malapert.
+#     Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
 #
 #     This program is free software: you can redistribute it and/or modify                    
 #     it under the terms of the GNU General Public License as published by
@@ -16,106 +16,125 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################
 
+
+#--------------------------------------------------------------------
+# Setup Global Variables
+#--------------------------------------------------------------------
 PROG=`basename $0 .sh`
+
+RESULTS=results
+DEPTH=1
+KEYS=../keys/keys.txt
+GRIDREPORT='../bin/solver_report'
+#--------------------------------------------------------------------
+# Version/Help Messages
+#--------------------------------------------------------------------
+
 version() {
 cat <<EOF
 $PROG 0.1
      
-Copyright (C) 2011 Arnaud Malapert.
+Copyright (C) 2011 Arnaud Malapert (UNS CNRS).
+
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+
 EOF
 }
 
 help() {
 cat <<EOF
-$0 summarizes results of jobs (files .o and .e) of multiple directories BENCH(s). \
+$0 summarizes results of jobs (files .o) of the directories $RESULTS. \
 $0 generate three files for each directory BENCH (explored recursivly).
-A file BENCH-e.log is created from all error files .e. 
-An archive BENCH-o from all output files .o ;  
 A file BENCH.res summarizes all results.     
 
 The results file (.res) is formatted as follows.   
-Each line represents an entry, i.e. a resolution of an instance, with the exception of the first line which contain the column labels.
+Each line represents an entry, i.e. the resolution of an instance by an algorithm, with the exception of the first line which contain the column labels.
 An entry has a fixed number of columns delimited by '|' (pretty print).  
-The first columns are defined as follows: $AWK_LABELS.
+
+The first column of the table is always the instance name.
+The following columns are defined by the key file (default: $KEYS).
   
-Usage: $0 [OPTION]... BENCH...
+Usage: $0 [OPTION]... 
      
 Options:
-   -a, --awk[=FILE]
-                         Additional columns defined by an awk user script.
-
-  --help        display this help and exit
-  --version     output version information and exit
+   -k FILE        keys for columns of the table.
+   -d DEPTH    depth at 
+   
+  -o        compress .o files  
+  -r        compress .res files  
+  -u       search for uncategorized .res files  
+  
+  -h        display this help and exit
+  -v       output version information and exit
    
 Report bugs to <arnaud (dot) malapert (at) unice (dot) com>."
 EOF
 }
-
-#--------------------------------------------------------------------
-# Setup Global Variables
-#--------------------------------------------------------------------
-
-RESULTS=results
-DEPTH=1
-REPORT='solver_report -k ../python/keys.txt'
 #--------------------------------------------------------------------
 # Test for prerequisites
 #--------------------------------------------------------------------
 
+while getopts ":k:d:oruhv" opt; do
+    case $opt in
+        k)
+            KEYS=$OPTARG
+            ;;
+        d)
+            DEPTH=$OPTARG
+            ;;
+        o) 
+            OZIP=1
+            ;;
+        r) 
+            RZIP=1
+            ;;
+        u) 
+            NOCAT=1
+            ;;
+        h)
+            help 
+            exit 0
+            ;;
+        v)
+            version;
+            exit 0
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            exit 1
+            ;;
+    esac
+done
 
-if [ $# -eq 0 ] || [ $1 = "-h" ]; then
-    help
-    exit 0
-elif [ $1 = "-v" ]; then
-    version
-    exit 0
+##TODO 
+REPORT_CMD="$GRIDREPORT -k $KEYS"
+
+
+find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
+do
+    RESFILE=$RESDIR'.res'
+    #echo $RESFILE
+    find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESFILE -i 
+done
+
+if [ $NOCAT ] ; then
+    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/uncategorized.res -i 
+fi
+
+if [ $OZIP ] ; then
+    echo "compress files .o ..."
+    find $RESULTS/* -name '*.o' -print0 | xargs -0 tar czf o-files.tar.gz 
+fi
+
+if [ $RZIP ] ; then
+    echo "compress files .res ..."
+    find $RESULTS/* -name '*.res' -print0 | xargs -0 tar czf res-files.tar.gz 
 fi
 
 
-#--------------------------------------------------------------------
-# Do something
-#--------------------------------------------------------------------
-
-
-
- find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
-do
-RESFILE=$RESDIR'.res'
-echo $RESFILE
-find $RESDIR  -type f -name '*.o'  | xargs $REPORT  -o $RESFILE -i 
-done
-
-#find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  | xargs echo
-# RESFILE=$RESULTS/uncategorized.res
-# echo $RESFILE
-
-# TODO zip .o and .res
-# echo "compress files .o ..."
-# find $RESULTS/* -name '*.o' | xargs tar czf o-files.tar.gz 
-# echo "compress files .res ..."
-# find $RESULTS/* -name '*.res' | xargs tar czf res-files.tar.gz 
-
-
-#Read directories
-# for DIR in "$@" 
-# do 
-#     if [ -d $DIR ] ;	then
-# 	echo "entering in $DIR"
-# 	FNAME=`basename $(readlink -nf $DIR)`
-# 	TAR=$FNAME-o.tar.gz
-#         echo "compress files .o ..."
-#        	find $DIR -name '*.o' | xargs tar czf $TAR $DIR/*.properties
-#         echo "generate error log ..."
-#  	find $DIR  -name '*.e'  -print0 | xargs -0 cat > $FNAME-e.log
-#        #generate .res
-# 	echo "generate results file ..."
-# 	#summarize results 
-# 	find $DIR -type f -name '*.o' -execdir $AWK_CMD  --source 'END{print "";}' '{}' \;  | sort | sed  "1i$HEADER"  |  column -s '~' -t > $FNAME.res# 	echo "generate results $DIR [OK]" 
-#     else
-# 	echo "generate results $DIR [FAIL]" 
-#     fi
-#done
 
 
