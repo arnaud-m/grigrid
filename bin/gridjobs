@@ -145,7 +145,7 @@ fi
 
 
 # submit the resolution of each instance by each algorithm.
-find  $INSTANCES  -name $PATTERN -print0 | while read -d $'\0' BENCHPATH
+find  $INSTANCES  -name "$PATTERN" -print0 | while read -d $'\0' BENCHPATH
 do
     for ALGOPATH in `ls $ALGORITHMS/*` ; do
         ADIR=`basename $ALGOPATH`;

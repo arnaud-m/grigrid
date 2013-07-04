@@ -32,7 +32,7 @@ GRIDREPORT='../bin/solver_report'
 
 version() {
 cat <<EOF
-$PROG 0.1
+$PROG 0.2
      
 Copyright (C) 2011 Arnaud Malapert (UNS CNRS).
 

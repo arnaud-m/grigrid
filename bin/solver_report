@@ -20,43 +20,56 @@ import argparse
         
         
 colsep="|"; 
+emptyfield='';
+
+primaryKey='i '
        
 ##########################
 # Definition of functions         
 
-def write_header(ostream, keys):
-    global colsep;
-    for key in keys:
-        ostream.write("%10s%s" % ( key[key.strip().rfind(' ')+1:], colsep) )
-    ostream.write('\n')
+def write_header(ostream, keys, args):
+    if not args.noheader : 
+        ostream.write("%-20s%s" % ( args.primarykey, args.colsep) )
+        for key in keys:
+            ostream.write("%-10s%s" % ( key[key.strip().rfind(' ')+1:], args.colsep) )
+        ostream.write('\n')
 
-def write_entry(ostream, results, keys):
-    global colsep;
-    if len(results) == 0:
-        logging.warning("Empty entry.")
-    elif len(keys) != len(results):
-        logging.warning("MISSING "+str(set(keys).difference(results.keys())))
+def write_entry(ostream, results, keys,args):
+    differences = set(keys).difference(results.keys());
+    if len(differences) == len(keys):
+        logging.warning("EMPTY Entry %s" % results[args.primarykey])
+        return
+    elif len(differences) > 0:
+        logging.warning("MISSING %s in %s "%  (str(differences), results[args.primarykey]))              
+             
+    if not args.noheader : ostream.write("%-20s%s" % ( results[args.primarykey], args.colsep))
     for key in keys:
         if results.has_key(key):
-            ostream.write("%10s%s" % ( results[key], colsep))
+            ostream.write("%10s%s" % ( results[key], args.colsep))
         else:
-            ostream.write("%10s%s" %  ('', colsep))
+            ostream.write("%10s%s" %  (args.emptyval, args.colsep))
     ostream.write('\n')
 
-def parse_entries(istream, ostream, keys):
-    ## TODO Warning when overriding values
-    ## TODO instance line
+def parse_entries(istream, ostream, keys, args):
     results ={} 
     for line in istream:
+        ## Search primary key
+        match=re.match(args.primarykey, line);
+        if match :
+            if len(results) > 0: write_entry(ostream, results, keys, args)
+            results ={} 
+            results[args.primarykey]=line[match.end():].strip();
+        ## Search other keys
         for key in keys:
             match=re.match(key, line);
             if match:
                 if key in results: 
-                    write_entry(ostream, results, keys)
-                    results ={} 
+                    logging.debug("Replacing %s by %s " % ( results[key] , key));
                 results[key]=line[match.end():].strip();
-                break
-    write_entry(ostream, results,keys)
+    # Flush results
+    if len(results) >0: 
+        write_entry(ostream, results, keys,args)
+        
 
 ##########################
 # Definition of a main procedure 
@@ -66,7 +79,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent('''\
-%(prog)s does something useful 
+%(prog)s produces a table from a set of .o file.
+Each line gives information about the resolution of a single problem instance.
+Each .o file can contain logs for 0, 1 or n instances.
  '''),
         epilog=textwrap.dedent('''\
 
@@ -74,17 +89,18 @@ if __name__ == "__main__":
 Copyright (C) 2011 Arnaud Malapert (UNS CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 
-Written by A Malapert
+Written by A Malapert.
 ''')
         );
-    parser.add_argument('-v','--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('--verbose', action='store_true',help="increase verbosity")
-    parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file containing the keys searched in .o files.",required=True) 
+    parser.add_argument('-pk', '--primarykey', default='i ', help="text file containing the keys searched in .o files.") 
+    parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file with secondary keys searched in .o files.",required=True) 
     parser.add_argument('-i', '--input', type=argparse.FileType('r'),nargs='+',help=".o files of solvers",required=True)
     parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)") 
-    parser.add_argument('-c', '--colsep',help="column separator for the table)") 
-    ## TODO
+    parser.add_argument('-c', '--colsep', default='|',help="column separator between fields of the table)") 
+    parser.add_argument('-e', '--emptyval',default=' ',help="empty value for a field of the table)") 
     parser.add_argument('-n', '--noheader', action='store_true', help="no row or column header in the table") 
+    parser.add_argument('--verbose', action='store_true',help="increase verbosity")
+    parser.add_argument('-v','--version', action='version', version='%(prog)s 0.1')
     args=parser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s')
@@ -92,16 +108,14 @@ Written by A Malapert
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    if args.colsep:
-        colsep=args.colsep
-        logging.debug("SET column separator to '%s'" % colsep)
+    if args.emptyval == args.colsep :
+        logging.warning("column separator and empty field are identical.")
 
     ## Read keys from a file
     keys=[];
     for key in args.keys:
         key=key.strip()+' ';
         if len(key)>1 and key not in keys : keys.append(key)
-    print keys
     args.keys.close();
 
     ## Initialize output file
@@ -109,7 +123,7 @@ Written by A Malapert
     if args.output :
         outfile = args.output
         logging.debug("WRITE %s" % outfile.name) 
-        if not args.noheader: write_header(outfile,keys)
+        if not args.noheader: write_header(outfile,keys, args)
     else :
         outfile=None
     ## Read and extract Table from log files
@@ -118,9 +132,9 @@ Written by A Malapert
             if outfile : outfile.close();
             fname=extre.sub('.res',infile.name);
             outfile = open(fname, 'w')
-            if not args.noheader: write_header(outfile,keys)
+            if not args.noheader: write_header(outfile,keys, args)
         logging.debug("READ %s" % infile.name)
-        parse_entries(infile,outfile,keys)
+        parse_entries(infile,outfile,keys, args)
         infile.close()
     if outfile : outfile.close();
 
