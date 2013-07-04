@@ -54,11 +54,11 @@ An entry has a fixed number of columns delimited by '|' (pretty print).
 The first column of the table is always the instance name.
 The following columns are defined by the key file (default: $KEYS).
   
-Usage: $0 [OPTION]... 
+Usage: $0 -k FILE [OPTION]... 
      
 Options:
-   -k FILE        keys for columns of the table.
-   -d DEPTH    depth at 
+   -k FILE        file with keys associated to the columns of the table (required).
+   -d DEPTH    a .res file is generated for each subdirectory at the given depth (default 1. 
    
   -o        compress .o files  
   -r        compress .res files  
@@ -110,20 +110,25 @@ while getopts ":k:d:oruhv" opt; do
     esac
 done
 
-##TODO 
-REPORT_CMD="$GRIDREPORT -k $KEYS"
+if [ ! $KEYS ] ; then
+    echo "Option -k is required." >&2
+    exit 1
+    
+fi
 
+REPORT_CMD="$GRIDREPORT -k $KEYS"
 
 find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
 do
     RESFILE=$RESDIR'.res'
-    #echo $RESFILE
     find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESFILE -i 
 done
 
 if [ $NOCAT ] ; then
     find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/uncategorized.res -i 
 fi
+
+##TODO sort .res lines
 
 if [ $OZIP ] ; then
     echo "compress files .o ..."

@@ -50,7 +50,7 @@ EOF
 help() {
 cat <<EOF
 $PROG generates new jobs for the batch scheduler OAR. $PROG operates in the current directory.
-For each solver configuration file in the flat directory $ALGORITHMS, and for each file matching the pattern in subdirectories of $INSTANCES, $PROG submits a new job based on the shell script $SOLVER.
+For each solver configuration file in the flat directory $ALGORITHMS, and for each file matching the pattern in the subdirectories of $INSTANCES, $PROG submits a new job based on the shell script $SOLVER.
 
 All error outputs are redirected to the file $ERRFILE.
 For each algorithm and each instance file, the standard output is redirected to a .o file in the directory $RESULTS.
@@ -120,8 +120,9 @@ done
 # Do something
 #--------------------------------------------------------------------
 
+
 if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
-    rm -fr $RESULTS
+    rm -fr $RESULTS $ERRFILE
     mkdir $RESULTS
 
 # ####################################
@@ -152,12 +153,13 @@ do
         OUTFILE=${BENCHPATH%.*}.o
         OUTFILE=${OUTFILE#$INSTANCES/} 
         OUTFILE=$RESULTS/${ADIR%.*}/$OUTFILE
-        OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S \"$SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED\""
+        JOBCMD="$SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED"
+        OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S \"$JOBCMD\""
         case $SUBMODE in 
             ## OAR submission on a cluster
             0) $OARCMD;;
            ##serial submission on localhost
-            1) $SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED > $OUTFILE 2> $ERRFILE;;
+            1) $JOBCMD > $OUTFILE 2>> $ERRFILE;;
             ## debug mode (only print command)
             *) echo $OARCMD;;
 	    esac
