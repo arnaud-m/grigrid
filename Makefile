@@ -2,7 +2,8 @@ SHELL = /bin/sh
 name=grigrid
 version=0.2
 BIN=$(wildcard bin/*)
-MAN=$(BIN:bin/%=man/%.1)
+man=$(BIN:bin/%=man/%.1)
+
 
 
 # build directories.
@@ -28,25 +29,26 @@ initdirs : dist-clean;
 	mkdir $(mandir) $(docdir)
 
 man/%.1 : bin/% 
-	help2man -v -v -h -h --no-discard-stderr --no-info $< -o $@
+	type -t help2man && help2man -v -v -h -h --no-discard-stderr --no-info $< -o $@
 
-$(manpages) : $(MAN) ;
+$(manpages) : $(man) ;
 	groff -Tps -mandoc $^ | ps2pdf  - $@
+
+man/%.1.gz : man/%.1
+	gzip $<
 
 dist: initdirs $(manpages);
 
 dist-archive : dist ;	
-	tar -czf $(name)-$(version).tar.gz  octave bin awk $(docdir)  Makefile README COPYING
+	tar -czf $(name)-$(version).tar.gz  bin $(docdir)  Makefile README COPYING
 	tar -czf $(name)-$(version)-test.tar.gz  test/* 	
 
 installdirs: ;
 	mkdir -p $(bindir) $(man1dir) $(libdir);
 
-install: installdirs ;
-	gzip $(MAN);
+install: installdirs $(man:%=%.gz);
 	cp $(mandir)/* $(man1dir) 
 	cp $(BIN) $(bindir)
-	cp awk/* octave/* $(libdir)	 	
 
 uninstall: ;
 	rm -f $(binexecs) $(manexecs);
@@ -55,7 +57,7 @@ uninstall: ;
 reinstall : dist-clean dist install;
 
 test : test-clean; 
-	cd $(testdir); ./test-grid4j.sh;
+	cd $(testdir); ./test-grigrid.sh;
 
 #keep on a single line to preserve the cd command	
 test-clean : ;

@@ -7,11 +7,8 @@ GRIGRID is a collection of shell scripts that eases the deployment of problem so
  ------------
 
 - GNU bash, version 4.2.10(1)-release (i386-redhat-linux-gnu)
-- GNU Awk 4.0.0
-- GNU Octave, version 3.4.3
-- Gnuplot 4.4 patchlevel 3
-- GNU help2man 1.40.2
-
+- Python 2.7.3
+- GNU help2man 1.40.2 (documentation only)
 
  DOCUMENTATION
  -------------
@@ -24,13 +21,11 @@ The documentation is also available as manpages.
  -------
 
 A zip archive grigrid-VERSION.tar.gz contains the following directories and files:
-- awk/
 - bin/ 
 - doc/
--octave/
 - COPYING
 - Makefile
 - README
 
 Unzip the archive.
-Type `make install' to install the programs and any data files and documentation.
+Type `make' and 'make install' to install the programs and any data files and documentation.
