@@ -94,7 +94,7 @@ Written by A Malapert.
         );
     parser.add_argument('-pk', '--primarykey', default='i ', help="text file containing the keys searched in .o files.") 
     parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file with secondary keys searched in .o files.",required=True) 
-    parser.add_argument('-i', '--input', type=argparse.FileType('r'),nargs='+',help=".o files of solvers",required=True)
+    parser.add_argument('-i', '--input', type=argparse.FileType('r'),nargs='*',help=".o files of solvers",required=True)
     parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)") 
     parser.add_argument('-c', '--colsep', default='|',help="column separator between fields of the table)") 
     parser.add_argument('-e', '--emptyval',default=' ',help="empty value for a field of the table)") 
@@ -104,6 +104,10 @@ Written by A Malapert.
     args=parser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s')
+
+    if not args.input :
+        logging.warning("nothing to do");
+        exit(0)
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)

@@ -9,6 +9,7 @@
 #+end_late
 * Tasks 							   
 #:CATEGORY: grigrid
+** TODO sort .res file in lex. order
 * Solver : problem solving program
 ** Problems and Categories
 *** Problems

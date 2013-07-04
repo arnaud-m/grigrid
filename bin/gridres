@@ -24,7 +24,6 @@ PROG=`basename $0 .sh`
 
 RESULTS=results
 DEPTH=1
-KEYS=../keys/keys.txt
 GRIDREPORT='../bin/solver_report'
 #--------------------------------------------------------------------
 # Version/Help Messages
@@ -52,7 +51,7 @@ Each line represents an entry, i.e. the resolution of an instance by an algorith
 An entry has a fixed number of columns delimited by '|' (pretty print).  
 
 The first column of the table is always the instance name.
-The following columns are defined by the key file (default: $KEYS).
+The following columns are defined by the key file.
   
 Usage: $0 -k FILE [OPTION]... 
      
@@ -62,7 +61,6 @@ Options:
    
   -o        compress .o files  
   -r        compress .res files  
-  -u       search for uncategorized .res files  
   
   -h        display this help and exit
   -v       output version information and exit
@@ -74,7 +72,7 @@ EOF
 # Test for prerequisites
 #--------------------------------------------------------------------
 
-while getopts ":k:d:oruhv" opt; do
+while getopts ":k:d:orhv" opt; do
     case $opt in
         k)
             KEYS=$OPTARG
@@ -87,9 +85,6 @@ while getopts ":k:d:oruhv" opt; do
             ;;
         r) 
             RZIP=1
-            ;;
-        u) 
-            NOCAT=1
             ;;
         h)
             help 
@@ -113,7 +108,6 @@ done
 if [ ! $KEYS ] ; then
     echo "Option -k is required." >&2
     exit 1
-    
 fi
 
 REPORT_CMD="$GRIDREPORT -k $KEYS"
@@ -124,11 +118,7 @@ do
     find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESFILE -i 
 done
 
-if [ $NOCAT ] ; then
-    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/uncategorized.res -i 
-fi
-
-##TODO sort .res lines
+find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/$RESULTS.res -i 
 
 if [ $OZIP ] ; then
     echo "compress files .o ..."
