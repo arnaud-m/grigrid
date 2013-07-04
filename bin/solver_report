@@ -19,28 +19,33 @@ from sets import Set
 import argparse
         
         
-        
+colsep="|"; 
+       
 ##########################
 # Definition of functions         
 
 def write_header(ostream, keys):
+    global colsep;
     for key in keys:
-        ostream.write("%10s|" % key[key.strip().rfind(' ')+1:])
+        ostream.write("%10s%s" % ( key[key.strip().rfind(' ')+1:], colsep) )
     ostream.write('\n')
 
 def write_entry(ostream, results, keys):
+    global colsep;
     if len(results) == 0:
         logging.warning("Empty entry.")
     elif len(keys) != len(results):
-        logging.warning("Missing fields: "+str(set(keys).difference(results.keys())))
+        logging.warning("MISSING "+str(set(keys).difference(results.keys())))
     for key in keys:
         if results.has_key(key):
-            ostream.write("%10s|" % results[key])
+            ostream.write("%10s%s" % ( results[key], colsep))
         else:
-            ostream.write("%10s|" %  '')
+            ostream.write("%10s%s" %  ('', colsep))
     ostream.write('\n')
 
 def parse_entries(istream, ostream, keys):
+    ## TODO Warning when overriding values
+    ## TODO instance line
     results ={} 
     for line in istream:
         for key in keys:
@@ -74,27 +79,37 @@ Written by A Malapert
         );
     parser.add_argument('-v','--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('--verbose', action='store_true',help="increase verbosity")
-    parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file containing the keys for log files.",required=True) 
-    parser.add_argument('-i', '--input', type=argparse.FileType('r'),nargs='+',help="log files of solvers",required=True)
+    parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file containing the keys searched in .o files.",required=True) 
+    parser.add_argument('-i', '--input', type=argparse.FileType('r'),nargs='+',help=".o files of solvers",required=True)
     parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)") 
+    parser.add_argument('-c', '--colsep',help="column separator for the table)") 
+    ## TODO
+    parser.add_argument('-n', '--noheader', action='store_true', help="no row or column header in the table") 
     args=parser.parse_args()
+
+    logging.basicConfig(format='%(levelname)s: %(message)s')
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    if args.colsep:
+        colsep=args.colsep
+        logging.debug("SET column separator to '%s'" % colsep)
 
     ## Read keys from a file
     keys=[];
     for key in args.keys:
         key=key.strip()+' ';
-        if key not in keys : keys.append(key)
-    #print keys
+        if len(key)>1 and key not in keys : keys.append(key)
+    print keys
     args.keys.close();
 
     ## Initialize output file
     extre = re.compile('\.[^\.]+$');
     if args.output :
         outfile = args.output
-        write_header(outfile,keys)
+        logging.debug("WRITE %s" % outfile.name) 
+        if not args.noheader: write_header(outfile,keys)
     else :
         outfile=None
     ## Read and extract Table from log files
@@ -103,12 +118,12 @@ Written by A Malapert
             if outfile : outfile.close();
             fname=extre.sub('.res',infile.name);
             outfile = open(fname, 'w')
-            write_header(outfile,keys)
-        logging.debug("EXTRACT %s -> %s" % (infile.name,outfile.name))
+            if not args.noheader: write_header(outfile,keys)
+        logging.debug("READ %s" % infile.name)
         parse_entries(infile,outfile,keys)
         infile.close()
-    
-   
+    if outfile : outfile.close();
+
     
 
     

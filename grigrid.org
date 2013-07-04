@@ -66,7 +66,7 @@ The meaning of these prefixes is detailed below.
     Any mistake in the writing of these lines will cause the answer to be disregarded. 
     Solvers are not required to provide any specific exit code corresponding to their answer.
     
-**** objective cost ('o ' line) (optimization only)
+**** objective ('o ' line) (optimization only)
 
     These lines start with the two following characters: lower case o followed by a space (ASCII code 32). These two characters are followed by one integer.
 
