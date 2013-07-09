@@ -154,14 +154,14 @@ do
         OUTFILE=${OUTFILE#$INSTANCES/} 
         OUTFILE=$RESULTS/${ADIR%.*}/$OUTFILE
         JOBCMD="$SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED"
-        OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S \"$JOBCMD\""
+        OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S "
         case $SUBMODE in 
             ## OAR submission on a cluster
-            0) $OARCMD;;
+            0) $OARCMD "$JOBCMD";;
            ##serial submission on localhost
             1) $JOBCMD > $OUTFILE 2>> $ERRFILE;;
             ## debug mode (only print command)
-            *) echo $OARCMD;;
+            *) echo $OARCMD "$JOBCMD";;
 	    esac
     done
 done
