@@ -42,7 +42,7 @@ version() {
 cat <<EOF
 $PROG 0.2
      
-Copyright (C) 2011 Arnaud Malapert (UNS CNRS).
+Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 EOF
 }

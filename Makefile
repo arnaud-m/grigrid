@@ -1,58 +1,62 @@
 SHELL = /bin/sh
 name=grigrid
 version=0.2
-BIN=$(wildcard bin/*)
-man=$(BIN:bin/%=man/%.1)
-
+bins=$(wildcard bin/*)
 
 
 # build directories.
 testdir=test
 mandir=man
 docdir=doc
-manpages=$(docdir)/$(name)-manpages.pdf
+
+#looking for help2man
+help2man=$(shell type -t help2man > /dev/null 2>&1 && echo help2man)
+ifdef $(help2man)
+man1=$(bins:bin/%=man/%.1)
+man1gz=$(man1:%=%.gz)
+manual=$(docdir)/$(name)-manpages.pdf
+endif
 
 # install directories
 # Common prefix
 prefix =~#/usr/local
-bindir=$(prefix)/bin
-# Where to put the directories used by the compiler.
-libdir =$(prefix)/.$(name)
-# Where to put the Info files.
-man1dir = $(prefix)/man/man1
-manexecs=$(BIN:bin/%=$(man1dir)/%.1.gz)
-binexecs=$(BIN:bin/%=$(bindir)/%)
+bintdir=$(prefix)/bin
+mantdir = $(prefix)/man/man1
+
+manexecs=$(bins:bin/%=$(mantdir)/%.1.gz)
+binexecs=$(bins:bin/%=$(bintdir)/%)
 
 all : dist ;
 
-initdirs : dist-clean;
+dist-clean : ;
+	rm -fr $(mandir) $(docdir) 
+
+dist-dirs : dist-clean;
 	mkdir $(mandir) $(docdir)
 
 man/%.1 : bin/% 
-	type -t help2man && help2man -v -v -h -h --no-discard-stderr --no-info $< -o $@
-
-$(manpages) : $(man) ;
-	groff -Tps -mandoc $^ | ps2pdf  - $@
+	help2man -v -v -h -h --no-discard-stderr --no-info $< -o $@
 
 man/%.1.gz : man/%.1
 	gzip $<
 
-dist: initdirs $(manpages);
+$(manual) : $(man1);
+	groff -Tps -mandoc $^ | ps2pdf  - $@ ;\
+
+dist: dist-dirs $(manual) $(man1gz);
 
 dist-archive : dist ;	
-	tar -czf $(name)-$(version).tar.gz  bin $(docdir)  Makefile README COPYING
-	tar -czf $(name)-$(version)-test.tar.gz  test/* 	
+	tar -czf $(name)-$(version).tar.gz  .
 
-installdirs: ;
-	mkdir -p $(bindir) $(man1dir) $(libdir);
+install-dirs: ;
+	mkdir -p $(bintdir) $(mantdir);
 
-install: installdirs $(man:%=%.gz);
-	cp $(mandir)/* $(man1dir) 
-	cp $(BIN) $(bindir)
+install: dist install-dirs;
+	cp $(mandir)/* $(mantdir) 
+	cp $(bins) $(bintdir)
 
 uninstall: ;
 	rm -f $(binexecs) $(manexecs);
-	rm -fr $(libdir) 
 
 reinstall : dist-clean dist install;
 
@@ -63,8 +67,6 @@ test : test-clean;
 test-clean : ;
 	cd $(testdir); rm -f *.tar.gz *.log ; rm -fr results;
 
-dist-clean : ;
-	rm -fr $(mandir) $(docdir) 
 
 clean: dist-clean test-clean ;
 
