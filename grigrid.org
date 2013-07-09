@@ -7,9 +7,15 @@
   pdfauthor   = {{{{AUTHOR}}}} %Org macro to take from #+AUTHOR
   }
 #+end_late
-* Tasks 							   
+* Tasks 		:NOEXPORT:					   
 #:CATEGORY: grigrid
-** TODO sort .res file in lex. order
+** solver_report 
+*** TODO sort .res file in lex. order
+*** TODO standard output if no output file specified (-o) 
+** gridres
+*** TODO generate independantly .sol and .res files
+*** TODO Zip all result files in a single archive.
+    Actually, option -k is mandatory.
 * Solver : problem solving program
 ** Problems and Categories
 *** Problems

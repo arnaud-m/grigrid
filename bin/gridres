@@ -23,8 +23,11 @@
 PROG=`basename $0 .sh`
 
 RESULTS=results
-DEPTH=1
 GRIDREPORT='../bin/solver_report'
+
+#Options
+DEPTH=1
+
 #--------------------------------------------------------------------
 # Version/Help Messages
 #--------------------------------------------------------------------
@@ -59,6 +62,7 @@ Options:
    -k FILE        file with keys associated to the columns of the table (required).
    -d DEPTH    a .res file is generated for each subdirectory at the given depth (default 1. 
    
+  -s        extract also  .sol files  
   -o        compress .o files  
   -r        compress .res files  
   
@@ -72,13 +76,16 @@ EOF
 # Test for prerequisites
 #--------------------------------------------------------------------
 
-while getopts ":k:d:orhv" opt; do
+while getopts ":k:d:sorhv" opt; do
     case $opt in
         k)
             KEYS=$OPTARG
             ;;
         d)
             DEPTH=$OPTARG
+            ;;
+        s) 
+            SOL=1
             ;;
         o) 
             OZIP=1
@@ -105,7 +112,7 @@ while getopts ":k:d:orhv" opt; do
     esac
 done
 
-if [ ! $KEYS ] ; then
+if [ ! -r $KEYS ] && [ !SOL] ; then
     echo "Option -k is required." >&2
     exit 1
 fi
@@ -114,11 +121,17 @@ REPORT_CMD="$GRIDREPORT -k $KEYS"
 
 find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
 do
-    RESFILE=$RESDIR'.res'
-    find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESFILE -i 
+    find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESDIR'.res' -i 
+    if [ $SOL ] ; then
+        find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESDIR.sol
+    fi
 done
 
 find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/$RESULTS.res -i 
+if [ $SOL ] ; then
+    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESULTS/$RESULTS.sol
+fi
+
 
 if [ $OZIP ] ; then
     echo "compress files .o ..."
