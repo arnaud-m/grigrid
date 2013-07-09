@@ -13,9 +13,12 @@
 *** TODO sort .res file in lex. order
 *** TODO standard output if no output file specified (-o) 
 ** gridres
-*** TODO generate independantly .sol and .res files
-*** TODO Zip all result files in a single archive.
+*** DONE generate independantly .sol and .res files
+    CLOSED: [2013-07-09 mar. 15:03]
     Actually, option -k is mandatory.
+*** DONE Zip all result files in a single archive.
+    CLOSED: [2013-07-09 mar. 15:03]
+
 * Solver : problem solving program
 ** Problems and Categories
 *** Problems

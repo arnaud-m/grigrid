@@ -56,15 +56,14 @@ An entry has a fixed number of columns delimited by '|' (pretty print).
 The first column of the table is always the instance name.
 The following columns are defined by the key file.
   
-Usage: $0 -k FILE [OPTION]... 
+Usage: $0 [OPTION]... 
      
 Options:
-   -k FILE        file with keys associated to the columns of the table (required).
-   -d DEPTH    a .res file is generated for each subdirectory at the given depth (default 1. 
-   
-  -s        extract also  .sol files  
-  -o        compress .o files  
-  -r        compress .res files  
+   -k FILE        extract results files (.res) using the key file argument.
+   -s                 extract solution files (.sol)  
+   -d DEPTH    a file is generated for each subdirectory at the given depth (default 1) 
+  
+  -z        compress all files  
   
   -h        display this help and exit
   -v       output version information and exit
@@ -76,7 +75,7 @@ EOF
 # Test for prerequisites
 #--------------------------------------------------------------------
 
-while getopts ":k:d:sorhv" opt; do
+while getopts ":k:d:szhv" opt; do
     case $opt in
         k)
             KEYS=$OPTARG
@@ -87,11 +86,8 @@ while getopts ":k:d:sorhv" opt; do
         s) 
             SOL=1
             ;;
-        o) 
-            OZIP=1
-            ;;
-        r) 
-            RZIP=1
+        z) 
+            ZIP=1
             ;;
         h)
             help 
@@ -112,35 +108,36 @@ while getopts ":k:d:sorhv" opt; do
     esac
 done
 
-if [ ! -r $KEYS ] && [ !SOL] ; then
-    echo "Option -k is required." >&2
+
+if [ -r "$KEYS" ] ; then
+    REPORT_CMD="$GRIDREPORT -k $KEYS"
+elif  [ -z "$SOL" ]; then
+    echo "At least one option  -k or -s is required." >&2
     exit 1
 fi
 
-REPORT_CMD="$GRIDREPORT -k $KEYS"
 
 find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
 do
-    find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESDIR'.res' -i 
-    if [ $SOL ] ; then
+    if [ -n "$REPORT_CMD" ] ;then
+        find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESDIR'.res' -i 
+    fi
+    if [ -n "$SOL" ] ; then
         find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESDIR.sol
     fi
 done
 
-find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/$RESULTS.res -i 
-if [ $SOL ] ; then
+if [ -n "$REPORT_CMD" ] ;then
+    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/$RESULTS.res -i 
+fi
+
+if [ -n "$SOL" ] ; then
     find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESULTS/$RESULTS.sol
 fi
 
 
-if [ $OZIP ] ; then
-    echo "compress files .o ..."
-    find $RESULTS/* -name '*.o' -print0 | xargs -0 tar czf o-files.tar.gz 
-fi
-
-if [ $RZIP ] ; then
-    echo "compress files .res ..."
-    find $RESULTS/* -name '*.res' -print0 | xargs -0 tar czf res-files.tar.gz 
+if [ $ZIP ] ; then
+    tar czf $RESULTS.tar.gz $RESULTS/*
 fi
 
 
