@@ -52,7 +52,9 @@ install-dirs: ;
 	mkdir -p $(bintdir) $(mantdir);
 
 install: dist install-dirs;
-	cp $(mandir)/* $(mantdir) 
+ifdef $(man1gz)
+		cp $(man1gz) $(mantdir);	
+endif	
 	cp $(bins) $(bintdir)
 
 uninstall: ;
