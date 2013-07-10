@@ -23,7 +23,7 @@
 PROG=`basename $0 .sh`
 
 RESULTS=results
-GRIDREPORT='../bin/solver_report'
+GRIDREPORT='solver_report'
 
 #Options
 DEPTH=1
@@ -80,11 +80,11 @@ while getopts ":k:d:szhv" opt; do
         k)
             KEYS=$OPTARG
             ;;
-        d)
-            DEPTH=$OPTARG
-            ;;
         s) 
             SOL=1
+            ;;
+        d)
+            DEPTH=$OPTARG
             ;;
         z) 
             ZIP=1

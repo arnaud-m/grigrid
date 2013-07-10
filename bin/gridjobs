@@ -128,7 +128,7 @@ if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
 # ####################################
 # copy instance directory struture into a temporary directory
     TMPDIR=`mktemp -d`
-    find  $INSTANCES/  -type d -print0 | while read -d $'\0' FILE
+    find  -H $INSTANCES  -type d -print0 | while read -d $'\0' FILE
     do
         mkdir -p $TMPDIR/${FILE#$INSTANCES/}
     done
@@ -146,7 +146,7 @@ fi
 
 
 # submit the resolution of each instance by each algorithm.
-find  $INSTANCES  -name "$PATTERN" -print0 | while read -d $'\0' BENCHPATH
+find  -H $INSTANCES  -name "$PATTERN" -print0 | while read -d $'\0' BENCHPATH
 do
     for ALGOPATH in `ls $ALGORITHMS/*` ; do
         ADIR=`basename $ALGOPATH`;

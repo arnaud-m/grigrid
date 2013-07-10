@@ -29,9 +29,9 @@ primaryKey='i '
 
 def write_header(ostream, keys, args):
     if not args.noheader : 
-        ostream.write("%-20s%s" % ( args.primarykey, args.colsep) )
+        ostream.write("%-20s %s" % ( args.primarykey, args.colsep) )
         for key in keys:
-            ostream.write("%-10s%s" % ( key[key.strip().rfind(' ')+1:], args.colsep) )
+            ostream.write("%-10s %s" % ( key[key.strip().rfind(' ')+1:], args.colsep) )
         ostream.write('\n')
 
 def write_entry(ostream, results, keys,args):
@@ -42,12 +42,12 @@ def write_entry(ostream, results, keys,args):
     elif len(differences) > 0:
         logging.warning("MISSING %s in %s "%  (str(differences), results[args.primarykey]))              
              
-    if not args.noheader : ostream.write("%-20s%s" % ( results[args.primarykey], args.colsep))
+    if not args.noheader : ostream.write("%-20s %s" % ( results[args.primarykey], args.colsep))
     for key in keys:
         if results.has_key(key):
-            ostream.write("%10s%s" % ( results[key], args.colsep))
+            ostream.write("%10s %s" % ( results[key], args.colsep))
         else:
-            ostream.write("%10s%s" %  (args.emptyval, args.colsep))
+            ostream.write("%10s %s" %  (args.emptyval, args.colsep))
     ostream.write('\n')
 
 def parse_entries(istream, ostream, keys, args):
