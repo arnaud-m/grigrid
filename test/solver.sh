@@ -17,4 +17,4 @@ echo "d OAR_JOB_ID $OAR_JOB_ID"
 echo "c Fake solver for demonstration" 
  
 echo "stderr $INST "`basename $1` >&2 
-exit$?
+exit $?

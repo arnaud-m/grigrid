@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ###################################################
 #     Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
 #
@@ -128,7 +128,7 @@ if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
 # ####################################
 # copy instance directory struture into a temporary directory
     TMPDIR=`mktemp -d`
-    find  -H $INSTANCES  -type d -print0 | while read -d $'\0' FILE
+    find  -H $INSTANCES/  -type d -print0 | while read -d $'\0' FILE
     do
         mkdir -p $TMPDIR/${FILE#$INSTANCES/}
     done
