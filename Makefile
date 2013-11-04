@@ -1,4 +1,4 @@
-SHELL = /bin/sh
+SHELL=/bin/sh
 name=grigrid
 version=0.2
 bins=$(wildcard bin/*)

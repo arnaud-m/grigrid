@@ -94,7 +94,7 @@ Written by A Malapert.
         );
     parser.add_argument('-pk', '--primarykey', default='i ', help="text file containing the keys searched in .o files.") 
     parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file with secondary keys searched in .o files.",required=True) 
-    parser.add_argument('-i', '--input', type=argparse.FileType('r'),nargs='*',help=".o files of solvers",required=True)
+    parser.add_argument('-i', '--input', nargs='*',help=".o files of solvers",required=True)
     parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)") 
     parser.add_argument('-c', '--colsep', default='|',help="column separator between fields of the table)") 
     parser.add_argument('-e', '--emptyval',default=' ',help="empty value for a field of the table)") 
@@ -121,7 +121,7 @@ Written by A Malapert.
         key=key.strip()+' ';
         if len(key)>1 and key not in keys : keys.append(key)
     args.keys.close();
-
+    
     ## Initialize output file
     extre = re.compile('\.[^\.]+$');
     if args.output :
@@ -130,14 +130,16 @@ Written by A Malapert.
         if not args.noheader: write_header(outfile,keys, args)
     else :
         outfile=None
+
     ## Read and extract Table from log files
-    for infile in args.input:
+    for filename in args.input:
+        infile=open(filename, 'r')
         if not args.output :
             if outfile : outfile.close();
-            fname=extre.sub('.res',infile.name);
+            fname=extre.sub('.res',filename);
             outfile = open(fname, 'w')
             if not args.noheader: write_header(outfile,keys, args)
-        logging.debug("READ %s" % infile.name)
+        logging.debug("READ %s" % filename)
         parse_entries(infile,outfile,keys, args)
         infile.close()
     if outfile : outfile.close();
