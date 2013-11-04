@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 ###################################################
-#     Copyright (C) 2011 Arnaud Malapert.
+#     Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
 #
 #     This program is free software: you can redistribute it and/or modify                    
 #     it under the terms of the GNU General Public License as published by
@@ -16,104 +16,130 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################
 
+
+#--------------------------------------------------------------------
+# Setup Global Variables
+#--------------------------------------------------------------------
 PROG=`basename $0 .sh`
+
+RESULTS=results
+GRIDREPORT='solver_report'
+
+#Options
+DEPTH=1
+
+#--------------------------------------------------------------------
+# Version/Help Messages
+#--------------------------------------------------------------------
+
 version() {
 cat <<EOF
-$PROG 0.1
+$PROG 0.2
      
-Copyright (C) 2011 Arnaud Malapert.
+Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
+
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+
 EOF
 }
 
 help() {
 cat <<EOF
-$0 summarizes results of jobs (files .o and .e) of multiple directories BENCH(s). \
+$0 summarizes results of jobs (files .o) of the directories $RESULTS. \
 $0 generate three files for each directory BENCH (explored recursivly).
-A file BENCH-e.log is created from all error files .e. 
-An archive BENCH-o from all output files .o ;  
 A file BENCH.res summarizes all results.     
 
 The results file (.res) is formatted as follows.   
-Each line represents an entry, i.e. a resolution of an instance, with the exception of the first line which contain the column labels.
+Each line represents an entry, i.e. the resolution of an instance by an algorithm, with the exception of the first line which contain the column labels.
 An entry has a fixed number of columns delimited by '|' (pretty print).  
-The first columns are defined as follows: $AWK_LABELS.
+
+The first column of the table is always the instance name.
+The following columns are defined by the key file.
   
-Usage: $0 [OPTION]... BENCH...
+Usage: $0 [OPTION]... 
      
 Options:
-   -a, --awk[=FILE]
-                         Additional columns defined by an awk user script.
-
-  --help        display this help and exit
-  --version     output version information and exit
+   -k FILE        extract results files (.res) using the key file argument.
+   -s                 extract solution files (.sol)  
+   -d DEPTH    a file is generated for each subdirectory at the given depth (default 1) 
+  
+  -z        compress all files  
+  
+  -h        display this help and exit
+  -v       output version information and exit
    
 Report bugs to <arnaud (dot) malapert (at) unice (dot) com>."
 EOF
 }
-
-#--------------------------------------------------------------------
-# Setup Global Variables
-#--------------------------------------------------------------------
-
-CORE_AWK=~/.grigrid/read-o.awk
-
 #--------------------------------------------------------------------
 # Test for prerequisites
 #--------------------------------------------------------------------
 
+while getopts ":k:d:szhv" opt; do
+    case $opt in
+        k)
+            KEYS=$OPTARG
+            ;;
+        s) 
+            SOL=1
+            ;;
+        d)
+            DEPTH=$OPTARG
+            ;;
+        z) 
+            ZIP=1
+            ;;
+        h)
+            help 
+            exit 0
+            ;;
+        v)
+            version;
+            exit 0
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            exit 1
+            ;;
+    esac
+done
 
-if [ $# -eq 0 ] || [ $1 = "--help" ]; then
-    help
-    exit 0
-elif [ $1 = "--version" ]; then
-    version
-    exit 0
-elif [ $1 = "-a" ] || [ $1 = "--awk" ]; then
-    if [ -f $2 ]; then
-	USER_AWK=$2;   
-	echo "awk user script: $USER_AWK."
-    else
-	echo "awk script ignored: $2."
-    fi  
-    shift 2
+
+if [ -r "$KEYS" ] ; then
+    REPORT_CMD="$GRIDREPORT -k $KEYS"
+elif  [ -z "$SOL" ]; then
+    echo "At least one option  -k or -s is required." >&2
+    exit 1
 fi
 
 
-#--------------------------------------------------------------------
-# Do something
-#--------------------------------------------------------------------
-
-#create header of result files and awk command 
-AWK_CMD="awk  -f $CORE_AWK"
-if [ $USER_AWK ]; then
-    AWK_CMD="$AWK_CMD  -f $USER_AWK"
-    HEADER=`sed -n 2p $USER_AWK`
-    HEADER=${HEADER:1}
-fi
-
-HEADER=`sed -n 2p $CORE_AWK`$HEADER
-
-#Read directories
-for DIR in "$@" 
-do 
-    if [ -d $DIR ] ;	then
-	echo "entering in $DIR"
-	FNAME=`basename $(readlink -nf $DIR)`
-	TAR=$FNAME-o.tar.gz
-        echo "compress files .o ..."
-       	find $DIR -name '*.o' | xargs tar czf $TAR $DIR/*.properties
-        echo "generate error log ..."
- 	find $DIR  -name '*.e'  -print0 | xargs -0 cat > $FNAME-e.log
-       #generate .res
-	echo "generate results file ..."
-	#summarize results 
-	find $DIR -type f -name '*.o' -execdir $AWK_CMD  --source 'END{print "";}' '{}' \;  | sort | sed  "1i$HEADER"  |  column -s '~' -t > $FNAME.res
-	echo "generate results $DIR [OK]" 
-    else
-	echo "generate results $DIR [FAIL]" 
+find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
+do
+    if [ -n "$REPORT_CMD" ] ;then
+        find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESDIR'.res' -i 
+    fi
+    if [ -n "$SOL" ] ; then
+        find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESDIR.sol
     fi
 done
+
+if [ -n "$REPORT_CMD" ] ;then
+    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/$RESULTS.res -i 
+fi
+
+if [ -n "$SOL" ] ; then
+    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESULTS/$RESULTS.sol
+fi
+
+
+if [ $ZIP ] ; then
+    tar czf $RESULTS.tar.gz $RESULTS/*
+fi
+
+
 
 

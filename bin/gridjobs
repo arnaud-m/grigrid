@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 ###################################################
-#     Copyright (C) 2011 Arnaud Malapert.
+#     Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
 #
 #     This program is free software: you can redistribute it and/or modify                    
 #     it under the terms of the GNU General Public License as published by
@@ -16,41 +16,61 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###################################################
 
+
+#--------------------------------------------------------------------
+# Setup Global Variables
+#--------------------------------------------------------------------
+
 PROG=`basename $0 .sh`
+ALGORITHMS=algorithms
+INSTANCES=instances
+RESULTS=results
+SOLVER=./solver.sh;
+
+ERRFILE=oar-stderr.log
+
+#Option arguments
+PATTERN='*.txt'
+RANDOMSEED=$$
+SUBMODE=0
+
+#--------------------------------------------------------------------
+# Version and help messages
+#--------------------------------------------------------------------
+
 version() {
 cat <<EOF
-$PROG 0.1
+$PROG 0.2
      
-Copyright (C) 2011 Arnaud Malapert.
+Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This  is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law."
 EOF
 }
 
 help() {
 cat <<EOF
-$PROG generates new jobs (shell script) for the batch server. 
-For each 'file' matching PATTERN in a subdirectory of BENCH, $PROG generates a script 'file.sh' which executes a single command CMD. 
-The target file is referenced in CMD by using '{}'. 
+$PROG generates new jobs for the batch scheduler OAR. $PROG operates in the current directory.
+For each solver configuration file in the flat directory $ALGORITHMS, and for each file matching the pattern in the subdirectories of $INSTANCES, $PROG submits a new job based on the shell script $SOLVER.
 
-For further automatic analysis of the optimization results, we will assume that : 
-a) each schell script solves exactly one instance, 
-b) the standard output is formatted according to the rules specified in the documentation,
-c) The standard and error outputs are redirected to files with extension .o and .e respectivly.
+All error outputs are redirected to the file $ERRFILE.
+For each algorithm and each instance file, the standard output is redirected to a .o file in the directory $RESULTS.
 
-Usage: $PROG [OPTION]... BENCH PATTERN CMD
+Usage: $PROG [OPTION]... 
 
 Options:
- --help        display this help and exit
- --version     output version information and exit
+ -p 'PATTERN'     filename pattern for instances   
+ -s  SEED         random seed  
+ 
+ -l        serial submission on localhost
+ -g        grid submission with OAR
+ -d        only print submission with OAR (debug)
+
+ -h        display this help and exit
+ -v        output version information and exit
      
 Report bugs to <arnaud (dot) malapert (at) unice (dot) fr>."
 EOF
 }
-
-#--------------------------------------------------------------------
-# Setup Global Variables
-#--------------------------------------------------------------------
 
 
 #--------------------------------------------------------------------
@@ -58,43 +78,92 @@ EOF
 #--------------------------------------------------------------------
 
 
-if [ $# -eq 0 ] || [ $1 = "--help" ]; then
-    help
-    exit 0
-elif [ $1 = "--version" ]; then
-    version
-    exit 0
-elif [ $# -lt 3 ] ; then
-    help
-    exit 1
-fi
+
+while getopts ":p:s:gldhv" opt; do
+    case $opt in
+        p)
+            PATTERN=$OPTARG
+            ;;
+        s)
+            SEED=$OPTARG
+            ;;
+        g)
+            SUBMODE=0
+            ;;
+        l)
+            SUBMODE=1
+            ;;
+       d)
+            SUBMODE=2
+            ;;
+        h)
+            help 
+            exit 0
+            ;;
+        v)
+            version;
+            exit 0
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            exit 1
+            ;;
+    esac
+done
 
 
 #--------------------------------------------------------------------
 # Do something
 #--------------------------------------------------------------------
 
-SOURCE=$1
-if [ -d  $SOURCE ]; then
-    shift	
-    PATTERN=$1
-    shift
-    #echo "start to generate job scripts in the directory $SOURCE ..."	
-    ##find all files matching PATTERN in the SOURCE directory
-    find  $SOURCE  -name $PATTERN -print0 | while read -d $'\0' FILE
-    ##generate a shell script for each file
+
+if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
+    rm -fr $RESULTS $ERRFILE
+    mkdir $RESULTS
+
+# ####################################
+# copy instance directory struture into a temporary directory
+    TMPDIR=`mktemp -d`
+    find  -H $INSTANCES/  -type d -print0 | while read -d $'\0' FILE
     do
-	SCRIPT="${FILE%.*}.sh" #change the extension
-	echo "#!/bin/sh" > $SCRIPT 
-        ##replace all occurence of {} in CMD by FNAME
-	FNAME=`basename $FILE`
-	CMD=`echo $*| sed "s:{}:$FNAME:g"`
-	echo $CMD >> $SCRIPT
-	chmod +x $SCRIPT
+        mkdir -p $TMPDIR/${FILE#$INSTANCES/}
     done
-    echo "jobs matching $PATTERN generated in the directory $SOURCE [OK]"
-else
-    echo "$SOURCE is not a directory";
-    exit 2;
-fi
+
+###############################
+# copy instance directory struture for each algorithm
+    for ALGO in `ls $ALGORITHMS` ; do
+        ALGODIR=$RESULTS/${ALGO%.*}
+        cp -a $TMPDIR $ALGODIR
+    done
+    
+    rm -fr $TMPDIR
+fi  
+
+
+
+# submit the resolution of each instance by each algorithm.
+find  -H $INSTANCES  -name "$PATTERN" -print0 | while read -d $'\0' BENCHPATH
+do
+    for ALGOPATH in `ls $ALGORITHMS/*` ; do
+        ADIR=`basename $ALGOPATH`;
+        OUTFILE=${BENCHPATH%.*}.o
+        OUTFILE=${OUTFILE#$INSTANCES/} 
+        OUTFILE=$RESULTS/${ADIR%.*}/$OUTFILE
+        JOBCMD="$SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED"
+        OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S "
+        case $SUBMODE in 
+            ## OAR submission on a cluster
+            0) $OARCMD "$JOBCMD";;
+           ##serial submission on localhost
+            1) $JOBCMD > $OUTFILE 2>> $ERRFILE;;
+            ## debug mode (only print command)
+            *) echo $OARCMD "$JOBCMD";;
+	    esac
+    done
+done
+
 
