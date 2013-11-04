@@ -1,31 +1,170 @@
- GRIGRID 
- ------------------------------------------
-
-GRIGRID is a collection of shell scripts that eases the deployment of problem solving benchmarks on a cluster.
-
- REQUIREMENTS
- ------------
-
-- GNU bash, version 4.2.10(1)-release (i386-redhat-linux-gnu)
-- Python 2.7.3
-- GNU help2man 1.40.2 (documentation only)
-
- DOCUMENTATION
- -------------
-
-Look for the most up-to-date documentation on the GRIGRID web site, under the documentation menu.
-The documentation is also available as manpages.
- 
-
- RELEASE
- -------
-
-A zip archive grigrid-VERSION.tar.gz contains the following directories and files:
-- bin/ 
-- doc/
-- COPYING
-- Makefile
-- README
-
-Unzip the archive.
-Type `make' and 'make install' to install the programs and any data files and documentation.
+<h2>Table of Contents</h2>
+<ul>
+<li><a href="#sec-1">1 General information</a>
+<ul>
+<li><a href="#sec-1-1">1.1 REQUIREMENTS</a></li>
+<li><a href="#sec-1-2">1.2 DOCUMENTATION</a></li>
+<li><a href="#sec-1-3">1.3 RELEASE</a></li>
+</ul></li>
+<li><a href="#sec-2">2 Problems and Categories</a>
+<ul>
+<li><a href="#sec-2-1">2.1 Problems</a></li>
+<li><a href="#sec-2-2">2.2 Categories</a></li>
+</ul></li>
+<li><a href="#sec-3">3 Execution Environment</a></li>
+<li><a href="#sec-4">4 Output Rules</a>
+<ul>
+<li><a href="#sec-4-1">4.1 Lines</a>
+<ul>
+<li><a href="#sec-4-1-1">4.1.1 instance ('i' line)</a></li>
+<li><a href="#sec-4-1-2">4.1.2 solution ('s ' line)</a></li>
+<li><a href="#sec-4-1-3">4.1.3 objective ('o ' line) (optimization only)</a></li>
+<li><a href="#sec-4-1-4">4.1.4 values ('v ' line)</a></li>
+<li><a href="#sec-4-1-5">4.1.5 diagnostic ('d ' line)</a></li>
+<li><a href="#sec-4-1-6">4.1.6 comment ('c ' line)</a></li>
+<li><a href="#sec-4-1-7">4.1.7 Important remarks</a></li>
+</ul></li>
+<li><a href="#sec-4-2">4.2 Diagnostics</a></li>
+<li><a href="#sec-4-3">4.3 Specific rules for satisfaction solvers</a></li>
+<li><a href="#sec-4-4">4.4 Specific rules for enumaration solvers</a></li>
+<li><a href="#sec-4-5">4.5 Specific rules for optimization solvers</a></li>
+<li><a href="#sec-4-6">4.6 Timestamp</a></li>
+</ul></li>
+<li><a href="#sec-5">5 Benchmarking Workflow</a>
+<ul>
+<li><a href="#sec-5-1">5.1 Benchmark directory</a></li>
+<li><a href="#sec-5-2">5.2 Execution</a></li>
+<li><a href="#sec-5-3">5.3 Reporting</a></li>
+<li><a href="#sec-5-4">5.4 Usecase</a></li>
+</ul></li>
+</ul>
+<h2 id="sec-1">1 General information</h2>
+<p>GRIGRID is a collection of scripts that eases deployment and reporting of problem solving benchmarks either on localhost or on a cluster.</p>
+<h3 id="sec-1-1">1.1 REQUIREMENTS</h3>
+<ul>
+<li>GNU bash, version 4.2.10(1)-release (i386-redhat-linux-gnu)</li>
+<li>Python 2.7.3</li>
+<li>GNU help2man 1.40.2 (documentation only)</li>
+</ul>
+<h3 id="sec-1-2">1.2 DOCUMENTATION</h3>
+<p>Look for the most up-to-date documentation on the GRIGRID web site. The documentation is also available as manpages.</p>
+<h3 id="sec-1-3">1.3 RELEASE</h3>
+<p>A zip archive grigrid-VERSION.tar.gz contains the following directories and files:</p>
+<ul>
+<li>bin/</li>
+<li>doc/</li>
+<li>test/</li>
+<li>COPYING</li>
+<li>Makefile</li>
+<li>README.org</li>
+<li>README</li>
+</ul>
+<p>Unzip the archive. Type `make' and 'make install' to install the programs and any data files and documentation (if help2man is installed).</p>
+<h2 id="sec-2">2 Problems and Categories</h2>
+<h3 id="sec-2-1">2.1 Problems</h3>
+<p>There are three categories of problems:</p>
+<ol>
+<li>SAT : satisfaction problem;</li>
+<li>ENUM : enumeration problem;</li>
+<li>OPT : optimization problem</li>
+</ol>
+<h3 id="sec-2-2">2.2 Categories</h3>
+<p>The solver categories are:</p>
+<ol>
+<li>complete</li>
+<li>incomplete</li>
+</ol>
+<p>Complete solvers can determine if an instance is satisfiable or not (or find and prove the optimum) whereas incomplete solvers cannot prove the unsatisfiability or the optimum.</p>
+<h2 id="sec-3">3 Execution Environment</h2>
+<p>Solvers will run either on localhost or on a cluster of computers using the Linux operating system. On a cluster, they will run under the control of another program (<a href="http://oar.imag.fr">oar</a>) which will enforce some limits on the memory and the total CPU time used by the program. Solvers will be run inside a sandbox that will prevent unauthorised use of the system (network connections, file creation outside the allowed directory, among others). Solvers can use several processes or threads but, it must be specified by giving oar instructions in the solver shell script. Two executions of a solver with the same parameters and system resources must output the same result in approximately the same time (so that the experiments can be repeated).</p>
+<p>You need to provide grigrid with a suggested command line that should be used to run your solver. In this command line, you will be asked to use the following placeholders, which will be replaced by the actual information given by the evaluation environment.</p>
+<ul>
+<li>ALGOPATH: will be replaced by the name of the file containing the configuration of the solver (including the path to the file). It is recommended that the solver uses this parameter. - BENCHPATH: will be replaced by the name of the file containing the instance to solve (including the path to the file). Obviously, the solver must use this parameter.</li>
+<li>RANDOMSEED: will be replaced by a random seed which is a number. This parameter MUST be used to initialise the random number generator when the solver uses random numbers. It is recorded by the evaluation environment and will allow to run the program on a given instance under the same conditions if necessary.</li>
+</ul>
+<h2 id="sec-4">4 Output Rules</h2>
+<p>The evaluation environment records everything that is output by your solver on stdout/stderr.</p>
+<p>In the futute, it will be able to timestamp each line. This can be very informative to check how your solvers behaved on some instances.</p>
+<p>Therefore solvers must output messages to the standard output and those messages will be used to check the results. The output format is inspired by the DIMACS output specification of the SAT competition and can be used to manually check some results. Lines output by the solver should be prefixed by 'i', 's', 'o ', 'v ', 'd '. Lines which do not start with one of these prefixes are considered as comment lines and are ignored. The meaning of these prefixes is detailed below.</p>
+<h3 id="sec-4-1">4.1 Lines</h3>
+<p>There exist 5 different types of lines. They are defined as follows:</p>
+<h4 id="sec-4-1-1">4.1.1 instance ('i' line)</h4>
+<p>These lines are mandatory and start with the two following characters: lower case i followed by a space (ASCII code 32).</p>
+<h4 id="sec-4-1-2">4.1.2 solution ('s ' line)</h4>
+<p>These lines are mandatory and start with the two following characters: lower case s followed by a space (ASCII code 32). These two characters are followed by one of the following answers:</p>
+<ul>
+<li>SAT: all categories.</li>
+<li>OPTIMUM: optimization category.</li>
+<li>ALL: enumeration category.</li>
+<li>UNSAT: all categories.</li>
+<li>UNKNOWN: all categories.</li>
+<li>TIMEOUT: all categories.</li>
+<li>UNSUPPORTED: all categories.</li>
+<li>ERROR: all categories</li>
+</ul>
+<p>Any mistake in the writing of these lines will cause other scripts to disregard the answer. Solvers are not required to provide any specific exit code corresponding to their answer.</p>
+<h4 id="sec-4-1-3">4.1.3 objective ('o ' line) (optimization only)</h4>
+<p>These lines start with the two following characters: lower case o followed by a space (ASCII code 32). These two characters are followed by one integer.</p>
+<h4 id="sec-4-1-4">4.1.4 values ('v ' line)</h4>
+<p>These lines start with the two following characters: lower case v followed by a space (ASCII code 32) and followed by a solution of the problem.</p>
+<h4 id="sec-4-1-5">4.1.5 diagnostic ('d ' line)</h4>
+<p>These lines are optional and start with the two following characters: lower case d followed by a space (ASCII code 32). Then, a keyword followed by a value must be given on this line.</p>
+<h4 id="sec-4-1-6">4.1.6 comment ('c ' line)</h4>
+<p>Such lines are optional and start with the two following characters: lower case c followed by a space (ASCII code 32). These lines are optional and may appear anywhere in the solver output. They contain any information that authors want to output. They are recorded by the evaluation environment for later viewing but are otherwise ignored. Submitters are advised to avoid outputting comment lines which may be useful in an interactive environment but otherwise useless in a batch environment. For example, outputting comment lines with the number of constraints read so far only increases the size of the logs with no benefit.</p>
+<h4 id="sec-4-1-7">4.1.7 Important remarks</h4>
+<p>Don't forget to flush the output as soon as you have printed a 'i' line, or a 's ' line or a 'v ' line.</p>
+<h3 id="sec-4-2">4.2 Diagnostics</h3>
+<p>A diagnostic is a (name,value) pair which describes the work carried out by the solver. They have to be written to stdout as a 'd ' line. Each diagnostic is a line of the form 'd NAME value', where NAME is a sequence of letters describing the diagnostic, and value is a sequence of characters defining the its value.</p>
+<h3 id="sec-4-3">4.3 Specific rules for satisfaction solvers</h3>
+<p>A CSP solver must output exactly one 's ' line. These lines are not necessarily the first ones in the output since the CSP solver can output some 'c ' and 'd ' lines in any order. If the solver does not output a 's ' line, or if the 's ' line is misspelled, then UNKNOWN will be assumed.</p>
+<h3 id="sec-4-4">4.4 Specific rules for enumaration solvers</h3>
+<h3 id="sec-4-5">4.5 Specific rules for optimization solvers</h3>
+<p>Since an optimization solver will not stop as soon as it finds a solution but instead will try to find a better solution, it must be given a way to output the best solution it found even when it reaches the time limit.</p>
+<p>Here, we do not assume that the solver can not intercept signals from the evaluation environment. <br /> First, you can configure the solver time limit so that it is compatible with the time limit of the evaluation environment (oar walltime). It can save some time as the solver avoids to output a certificate for each solution it found. It only outputs a certificate for the best solution which it was able to find. <br /> Second, you can output a 's ' line with SATISFIABLE when the first solution is found, and a certificate 'v ' line each time you find a solution which is better than the previous ones accompanied (this is mandatory) with an 'o ' line. Only the last complete certificate will be taken into account. If eventually, your solver proves that the last solution that was output is optimal, then it must output 's OPTIMUM FOUND'. A solver with is aware oar walltime can output:</p>
+<pre class="example"><code>     o 19
+     o 16
+     o 1
+     s OPTIMUM FOUND
+     v 1 4 7 8 3 4</code></pre>
+<p>A solver which ignores the oar walltime may output for the same problem :</p>
+<pre class="example"><code>     c Got a first solution !
+     s SATISFIABLE
+     o 19
+     v 1 1 1 1 1 1
+     c Found a better solution
+     o 16
+     v 1 2 1 1 1 1
+     c Found a better solution
+     o 1
+     v 1 4 7 8 3 4
+     s OPTIMUM FOUND</code></pre>
+<h3 id="sec-4-6">4.6 TODO Timestamp</h3>
+<p>The evaluation environment will automatically timestamp each of these lines so that it is possible to know when the solver has found a better solution and the cost of the solution. The goal is to analyse how solvers progress toward the best solution. The timestamped output will be for example:</p>
+<pre class="example"><code>     o 19 0.57
+     o 16 1.23
+     o 1 2.7
+     s OPTIMUM FOUND 10.5
+     v 1 4 7 8 3 4</code></pre>
+<p>The last column in this example is the time at which the line was output by the solver (expressed in seconds of wall clock time since the beginning of the program).</p>
+<h2 id="sec-5">5 Benchmarking Workflow</h2>
+<h3 id="sec-5-1">5.1 Benchmark directory</h3>
+<p>The benchmark directory must contain the following files and directories :</p>
+<ul>
+<li><code>solver.sh</code> : A shell script compatible with the execution environment.</li>
+<li><code>instances</code> : an arborescence which contains all instances.</li>
+<li><code>algorithms</code> : a <em>flat</em> directory which contains all configuration files for the solver.</li>
+</ul>
+<h3 id="sec-5-2">5.2 Execution</h3>
+<p>The script <code>gridjobs</code> :</p>
+<ol>
+<li>Submit the script <code>solver.sh</code> for each pair (ALGOPATH, BENCHPATH)</li>
+<li>Write the standard output in a file new directory <code>results</code> (results/ALGO/BENCHPATH where the BENCHPATH extension is replaced by '.o').</li>
+</ol>
+<h3 id="sec-5-3">5.3 Reporting</h3>
+<p>The script <code>gridres</code> agregates the results:</p>
+<ul>
+<li><code>.sol</code> files contain all 'v' lines</li>
+<li><code>.res</code> files contain table with a subset of 'i', 's', 'd', and even 'c' lines specified <code>-k</code> argument.</li>
+</ul>
+<h3 id="sec-5-4">5.4 Usecase</h3>
+<p>© 2013 Arnaud Malapert. Last updated 2013-11-04.</p>
