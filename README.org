@@ -101,7 +101,7 @@ A diagnostic is a (name,value) pair which describes the work carried out by the 
    A CSP solver must output exactly one 's ' line.
    These lines are not necessarily the first ones in the output since the CSP solver can output some 'c ' and 'd ' lines in any order. 
    If the solver does not output a 's ' line, or if the 's ' line is misspelled, then UNKNOWN will be assumed. 
-** Specific rules for enumaration solvers
+** Specific rules for enumeration solvers
 ** Specific rules for optimization solvers
 
 Since an optimization solver will not stop as soon as it finds a solution but instead will try to find a better solution, it must be given a way to output the best solution it found even when it reaches the time limit. 

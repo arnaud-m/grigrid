@@ -1,13 +1,13 @@
 #!/usr/bin/python
 ##########################
-# Author: A. Malapert                                    #
-# Version: 0.1                                                  #
-# Licence: GPL                                                #
+# Author: A. Malapert
+# Version: 0.1
+# Licence: GPL
 ##########################
 
 
 
-##########################
+##########################################
 # Import of external classes and functions
 
 import StringIO
@@ -18,11 +18,14 @@ import sys
 from sets import Set
 import argparse
         
-        
+
+##########################
+# Definition of variables         
+
+keys=[];
 colsep="|"; 
 emptyfield='';
 
-primaryKey='i '
        
 ##########################
 # Definition of functions         
@@ -63,9 +66,10 @@ def parse_entries(istream, ostream, keys, args):
         for key in keys:
             match=re.match(key, line);
             if match:
+                value=line[match.end():].strip();
                 if key in results: 
-                    logging.debug("Replacing %s by %s " % ( results[key] , key));
-                results[key]=line[match.end():].strip();
+                    logging.debug("%s- replace %s by %s " % ( key, results[key] , value));
+                results[key]=value;
     # Flush results
     if len(results) >0: 
         write_entry(ostream, results, keys,args)
@@ -92,9 +96,9 @@ License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 Written by A Malapert.
 ''')
         );
-    parser.add_argument('-pk', '--primarykey', default='i ', help="text file containing the keys searched in .o files.") 
-    parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file with secondary keys searched in .o files.",required=True) 
     parser.add_argument('-i', '--input', nargs='*',help=".o files of solvers",required=True)
+    parser.add_argument('-pk', '--primarykey', default='i ', help="primary key in .o files (entry/line separator)")    
+    parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file with prefix searched in .o files") 
     parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)") 
     parser.add_argument('-c', '--colsep', default='|',help="column separator between fields of the table)") 
     parser.add_argument('-e', '--emptyval',default=' ',help="empty value for a field of the table)") 
@@ -115,18 +119,23 @@ Written by A Malapert.
     if args.emptyval == args.colsep :
         logging.warning("column separator and empty field are identical.")
 
-    ## Read keys from a file
-    keys=[];
-    for key in args.keys:
-        key=key.strip()+' ';
-        if len(key)>1 and key not in keys : keys.append(key)
-    args.keys.close();
+    if args.keys :
+        ## read keys from a user file
+        for key in args.keys:
+            key=key.strip()+' ';
+            if len(key)>1 and key not in keys : keys.append(key)
+        args.keys.close();
+    else : 
+        # use default keys
+        keys.extend(['s ','o ', 'd NBSOLS ', 'd RUNTIME ','d NODES ', 'd BACKTRACKS '])
+
+    logging.info("KEYS %s" % str(keys)) 
     
     ## Initialize output file
     extre = re.compile('\.[^\.]+$');
     if args.output :
         outfile = args.output
-        logging.debug("WRITE %s" % outfile.name) 
+        logging.info("WRITE %s" % outfile.name) 
         if not args.noheader: write_header(outfile,keys, args)
     else :
         outfile=None
@@ -138,6 +147,7 @@ Written by A Malapert.
             if outfile : outfile.close();
             fname=extre.sub('.res',filename);
             outfile = open(fname, 'w')
+            logging.info("WRITE %s" % outfile.name) 
             if not args.noheader: write_header(outfile,keys, args)
         logging.debug("READ %s" % filename)
         parse_entries(infile,outfile,keys, args)
