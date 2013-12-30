@@ -1,7 +1,5 @@
 #!/bin/sh
 #OAR -l /core=1,walltime=24:00:00
-#OAR -t besteffort
-
 
 INST=`basename $2`
 echo "i $INST"

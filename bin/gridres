@@ -1,5 +1,5 @@
 #!/bin/bash
-###################################################
+############################################################################
 #     Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
 #
 #     This program is free software: you can redistribute it and/or modify                    
@@ -14,7 +14,7 @@
 #
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-###################################################
+############################################################################
 
 
 #--------------------------------------------------------------------
@@ -25,7 +25,6 @@ PROG=`basename $0 .sh`
 RESULTS=results
 GRIDREPORT='solver_report'
 
-#Options
 DEPTH=1
 
 #--------------------------------------------------------------------
@@ -46,45 +45,48 @@ EOF
 help() {
 cat <<EOF
 $0 summarizes results of jobs (files .o) of the directories $RESULTS. \
-$0 generate three files for each directory BENCH (explored recursivly).
-A file BENCH.res summarizes all results.     
+$0 can generate two files for each directory BENCH (explored recursivly).
 
-The results file (.res) is formatted as follows.   
+A file BENCH.res summarizes all results formatted as follows.   
 Each line represents an entry, i.e. the resolution of an instance by an algorithm, with the exception of the first line which contain the column labels.
-An entry has a fixed number of columns delimited by '|' (pretty print).  
+An entry has a fixed number of columns delimited by '|' (pretty print). The first column of the table is always the instance name. The following columns are defined by the keys.
 
-The first column of the table is always the instance name.
-The following columns are defined by the key file.
-  
+A file BENCH.sol contains all solutions.  
+
 Usage: $0 [OPTION]... 
      
 Options:
-   -k FILE        extract results files (.res) using the key file argument.
-   -s                 extract solution files (.sol)  
-   -d DEPTH    a file is generated for each subdirectory at the given depth (default 1) 
+   -k FILE        extract results files (.res) using keys in FILE
+   -K             extract results files (.res) using default keys
+   -s             extract solution files (.sol)  
+   -d DEPTH       agregation of all results for each subdirectory at the given depth (default 1) 
   
-  -z        compress all files  
+  -z        compress all files .o  
   
-  -h        display this help and exit
+  -h       display this help and exit
   -v       output version information and exit
    
-Report bugs to <arnaud (dot) malapert (at) unice (dot) com>."
+Report bugs to <arnaud (dot) malapert (at) unice (dot) fr>."
 EOF
 }
 #--------------------------------------------------------------------
 # Test for prerequisites
 #--------------------------------------------------------------------
 
-while getopts ":k:d:szhv" opt; do
+while getopts ":k:d:Kszhv" opt; do
     case $opt in
         k)
+            KEY=1
             KEYS=$OPTARG
-            ;;
-        s) 
-            SOL=1
             ;;
         d)
             DEPTH=$OPTARG
+            ;;
+        K)
+            KEY=1
+            ;;
+        s) 
+            SOL=1
             ;;
         z) 
             ZIP=1
@@ -108,30 +110,34 @@ while getopts ":k:d:szhv" opt; do
     esac
 done
 
-
-if [ -r "$KEYS" ] ; then
-    REPORT_CMD="$GRIDREPORT -k $KEYS"
-elif  [ -z "$SOL" ]; then
-    echo "At least one option  -k or -s is required." >&2
-    exit 1
+if [ ! $KEY$SOL$ZIP ] ; then
+     echo "$0 : Nothing to do." >&2
+     exit 0
 fi
 
+if [ $KEY ] ; then
+    if [ $KEYS ] ; then
+        REPORT_CMD="$GRIDREPORT -k $KEYS"
+    else 
+        REPORT_CMD="$GRIDREPORT"
+    fi
+fi
 
 find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
 do
-    if [ -n "$REPORT_CMD" ] ;then
+    if [ $KEY ] ;then
         find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESDIR'.res' -i 
     fi
-    if [ -n "$SOL" ] ; then
+    if [ $SOL ] ; then
         find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESDIR.sol
     fi
 done
 
-if [ -n "$REPORT_CMD" ] ;then
+if [ $KEY ] ;then
     find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/$RESULTS.res -i 
 fi
 
-if [ -n "$SOL" ] ; then
+if [ $SOL ] ; then
     find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESULTS/$RESULTS.sol
 fi
 
