@@ -30,7 +30,7 @@ SOLVER=./solver.sh;
 ERRFILE=oar-stderr.log
 
 #Option arguments
-PATTERN='*.txt'
+PATTERN='*'
 RANDOMSEED=$$
 SUBMODE=0
 
@@ -85,7 +85,7 @@ while getopts ":p:s:gldhv" opt; do
             PATTERN=$OPTARG
             ;;
         s)
-            SEED=$OPTARG
+            RANDOMSEED=$OPTARG
             ;;
         g)
             SUBMODE=0
@@ -93,7 +93,7 @@ while getopts ":p:s:gldhv" opt; do
         l)
             SUBMODE=1
             ;;
-       d)
+        d)
             SUBMODE=2
             ;;
         h)
@@ -126,7 +126,7 @@ if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
     mkdir $RESULTS
 
 # ####################################
-# copy instance directory struture into a temporary directory
+# copy instances directory struture into a temporary directory
     TMPDIR=`mktemp -d`
     find  -H $INSTANCES/  -type d -print0 | while read -d $'\0' FILE
     do
@@ -134,7 +134,7 @@ if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
     done
 
 ###############################
-# copy instance directory struture for each algorithm
+# copy instances directory struture for each algorithm
     for ALGO in `ls $ALGORITHMS` ; do
         ALGODIR=$RESULTS/${ALGO%.*}
         cp -a $TMPDIR $ALGODIR
