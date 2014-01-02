@@ -1,5 +1,5 @@
 #+SETUPFILE: ~/.emacs.d/org-templates/base.org
-#+TITLE: Grigrid Readme
+# #+TITLE: Grigrid Readme
 #+OPTIONS: skip:nil 
 * General information 
 GRIGRID is a collection of scripts that eases deployment and reporting of problem solving benchmarks either on localhost or on a cluster.
