@@ -50,10 +50,10 @@ EOF
 help() {
 cat <<EOF
 $PROG generates new jobs for the batch scheduler OAR. $PROG operates in the current directory.
-For each solver configuration file in the flat directory $ALGORITHMS, and for each file matching the pattern in the subdirectories of $INSTANCES, $PROG submits a new job based on the shell script $SOLVER.
+For each solver configuration file in the flat directory '$ALGORITHMS', and for each file matching the pattern in the subdirectories of '$INSTANCES', $PROG submits a new job based on the shell script $SOLVER.
 
 All error outputs are redirected to the file $ERRFILE.
-For each algorithm and each instance file, the standard output is redirected to a .o file in the directory $RESULTS.
+For each algorithm and each instance file, the standard output is redirected to a file .o in the directory '$RESULTS'.
 
 Usage: $PROG [OPTION]... 
 

@@ -1,16 +1,18 @@
-#+SETUPFILE: ~/.emacs.d/org-templates/base.org
-# #+TITLE: Grigrid Readme
-#+OPTIONS: skip:nil 
+#+STARTUP: overview
+#+STARTUP: hidestars
+#+STARTUP: logdone
+#+COLUMNS: %38ITEM(Details) %7TODO(To Do) %TAGS(Context) 
+#+OPTIONS: skip:nil @:t ::t |:t ^:t f:t 
 * General information 
 GRIGRID is a collection of scripts that eases deployment and reporting of problem solving benchmarks either on localhost or on a cluster.
-** REQUIREMENTS
+** Requirements
 - GNU bash, version 4.2.10(1)-release (i386-redhat-linux-gnu)
 - Python 2.7.3
 - GNU help2man 1.40.2 (documentation only)
-** DOCUMENTATION
+** Documentation
    Look for the most up-to-date documentation on the GRIGRID web site.
    The documentation is also available as manpages.
-** RELEASE
+** Release
 A zip archive grigrid-VERSION.tar.gz contains the following directories and files:
 - bin/ 
 - doc/
@@ -18,7 +20,6 @@ A zip archive grigrid-VERSION.tar.gz contains the following directories and file
 - COPYING
 - Makefile
 - README.org
-- README
 Unzip the archive.
 Type `make' and 'make install' to install the programs and any data files and documentation (if help2man is installed).
 * Problems and Categories
@@ -33,7 +34,6 @@ The solver categories are:
 2. incomplete
 Complete solvers can determine if an instance is satisfiable or not (or find and prove the optimum) whereas incomplete solvers cannot prove the unsatisfiability or the optimum.
 * Execution Environment
-  
  Solvers will run either on localhost or on a cluster of computers using the Linux operating system. 
  On a cluster, they will run under the control of another program ([[http://oar.imag.fr][oar]]) which will enforce some limits on the memory and the total CPU time used by the program. 
  Solvers will be run inside a sandbox that will prevent unauthorised use of the system (network connections, file creation outside the allowed directory, among others). 
@@ -49,7 +49,6 @@ Complete solvers can determine if an instance is satisfiable or not (or find and
     will be replaced by a random seed which is a number. This parameter MUST be used to initialise the random number generator when the solver uses random numbers. It is recorded by the evaluation environment and will allow to run the program on a given instance under the same conditions if necessary. 
 
 * Output Rules
-
 The evaluation environment records everything that is output by your solver on stdout/stderr.
 
 In the futute, it will be able to timestamp each line. 
@@ -139,7 +138,7 @@ A solver which ignores the oar walltime may output for the same problem :
 :      s OPTIMUM FOUND 10.5
 :      v 1 4 7 8 3 4
 The last column in this example is the time at which the line was output by the solver (expressed in seconds of wall clock time since the beginning of the program).
-* Benchmarking Workflow
+* Workflow
 ** Benchmark directory
 The benchmark directory must contain the following files and directories :
  - ~solver.sh~ : A shell script compatible with the execution environment.
@@ -154,5 +153,7 @@ The script ~gridres~ agregates the results:
 - ~.sol~ files contain all 'v' lines
 - ~.res~ files contain table with a subset of 'i', 's', 'd', and even 'c' lines specified ~-k~ argument.
 ** Usecase 
-
+: cd test
+: gridjobs -l
+: gridres -k keys.txt 
  

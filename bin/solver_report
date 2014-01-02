@@ -1,7 +1,7 @@
 #!/usr/bin/python
 ##########################
 # Author: A. Malapert
-# Version: 0.1
+# Version: 0.2
 # Licence: GPL
 ##########################
 
@@ -85,11 +85,11 @@ if __name__ == "__main__":
         description=textwrap.dedent('''\
 %(prog)s produces a table from a set of .o file.
 Each line gives information about the resolution of a single problem instance.
-Each .o file can contain logs for 0, 1 or n instances.
+Each .o file contains logs for 0, 1 or n instances.
  '''),
         epilog=textwrap.dedent('''\
 
-%(prog)s 0.1
+%(prog)s 0.2
 Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 
@@ -104,7 +104,7 @@ Written by A Malapert.
     parser.add_argument('-e', '--emptyval',default=' ',help="empty value for a field of the table)") 
     parser.add_argument('-n', '--noheader', action='store_true', help="no row or column header in the table") 
     parser.add_argument('--verbose', action='store_true',help="increase verbosity")
-    parser.add_argument('-v','--version', action='version', version='%(prog)s 0.1')
+    parser.add_argument('-v','--version', action='version', version='%(prog)s 0.2')
     args=parser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s')
