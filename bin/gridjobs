@@ -34,6 +34,7 @@ PATTERN='*'
 RANDOMSEED=$$
 SUBMODE=0
 
+
 #--------------------------------------------------------------------
 # Version and help messages
 #--------------------------------------------------------------------
@@ -121,31 +122,46 @@ done
 #--------------------------------------------------------------------
 
 
+##################################
+#Check that oarsub is installed
+if [ $SUBMODE -eq 0 ] ; then
+    if which oarsub > /dev/null ; then
+        #do nothing command
+        :
+    else
+        read -p "execute jobs on localhost (y/n) ? " -n 1 -r
+        echo    # (optional) move to a new line
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            exit 1
+        fi
+        SUBMODE=1
+    fi     
+fi
+
+####################################
+# Initialization ff not in debug 
 if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
     rm -fr $RESULTS $ERRFILE
     mkdir $RESULTS
-
-# ####################################
-# copy instances directory struture into a temporary directory
-    TMPDIR=`mktemp -d`
+    
+    # copy instances directory struture into a temporary directory
+    TMPDIR=`mktemp -d gridjobs_XXXXX`
     find  -H $INSTANCES/  -type d -print0 | while read -d $'\0' FILE
     do
         mkdir -p $TMPDIR/${FILE#$INSTANCES/}
     done
-
-###############################
-# copy instances directory struture for each algorithm
+    
+    # copy instances directory struture for each algorithm
     for ALGO in `ls $ALGORITHMS` ; do
         ALGODIR=$RESULTS/${ALGO%.*}
         cp -a $TMPDIR $ALGODIR
     done
-    
     rm -fr $TMPDIR
 fi  
 
-
-
-# submit the resolution of each instance by each algorithm.
+###############################
+# submit one solving job for each instance and for each algorithm
 find  -H $INSTANCES  -name "$PATTERN" -print0 | while read -d $'\0' BENCHPATH
 do
     for ALGOPATH in `ls $ALGORITHMS/*` ; do
@@ -158,7 +174,7 @@ do
         case $SUBMODE in 
             ## OAR submission on a cluster
             0) $OARCMD "$JOBCMD";;
-           ##serial submission on localhost
+            ##serial submission on localhost
             1) $JOBCMD > $OUTFILE 2>> $ERRFILE;;
             ## debug mode (only print command)
             *) echo $OARCMD "$JOBCMD";;
