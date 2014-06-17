@@ -5,8 +5,6 @@
 # Licence: GPL
 ##########################
 
-
-
 ##########################################
 # Import of external classes and functions
 
@@ -23,9 +21,6 @@ import argparse
 # Definition of variables         
 
 keys=[];
-colsep="|"; 
-emptyfield='';
-
        
 ##########################
 # Definition of functions         
@@ -37,21 +32,22 @@ def write_header(ostream, keys, args):
             ostream.write("%-10s %s" % ( key[key.strip().rfind(' ')+1:], args.colsep) )
         ostream.write('\n')
 
-def write_entry(ostream, results, keys,args):
-    differences = set(keys).difference(results.keys());
-    if len(differences) == len(keys):
-        logging.warning("EMPTY Entry %s" % results[args.primarykey])
-        return
-    elif len(differences) > 0:
-        logging.warning("MISSING %s in %s "%  (str(differences), results[args.primarykey]))              
-             
-    if not args.noheader : ostream.write("%-20s %s" % ( results[args.primarykey], args.colsep))
+def write_entry(ostream, results, keys, args):
+    if len(results) == 0:
+        logging.debug("[%s] NO Entry" % ostream.name)
+        return None;
+
+    if not args.noheader : 
+        ostream.write("%-20s %s" % ( results.get(args.primarykey, args.defname), args.colsep));
+            
     for key in keys:
-        if results.has_key(key):
+        if key in results:
             ostream.write("%10s %s" % ( results[key], args.colsep))
         else:
-            ostream.write("%10s %s" %  (args.emptyval, args.colsep))
+            ostream.write("%10s %s" %  (args.defval, args.colsep))
+            logging.warning("[%s] Missing field '%s' for entry '%s'"%  (ostream.name, key, results.get(args.primarykey,args.defname)))                
     ostream.write('\n')
+
 
 def parse_entries(istream, ostream, keys, args):
     results ={} 
@@ -59,7 +55,7 @@ def parse_entries(istream, ostream, keys, args):
         ## Search primary key
         match=re.match(args.primarykey, line);
         if match :
-            if len(results) > 0: write_entry(ostream, results, keys, args)
+            write_entry(ostream, results, keys, args)
             results ={} 
             results[args.primarykey]=line[match.end():].strip();
         ## Search other keys
@@ -68,11 +64,10 @@ def parse_entries(istream, ostream, keys, args):
             if match:
                 value=line[match.end():].strip();
                 if key in results: 
-                    logging.debug("%s- replace %s by %s " % ( key, results[key] , value));
+                    logging.debug("[%s] value '%s' of key '%s' replaced by '%s'" % ( istream.name, results[key], key , value));
                 results[key]=value;
     # Flush results
-    if len(results) >0: 
-        write_entry(ostream, results, keys,args)
+    write_entry(ostream, results, keys,args)
         
 
 ##########################
@@ -97,12 +92,13 @@ Written by A Malapert.
 ''')
         );
     parser.add_argument('-i', '--input', nargs='*',help=".o files of solvers",required=True)
-    parser.add_argument('-pk', '--primarykey', default='i ', help="primary key in .o files (entry/line separator)")    
+    parser.add_argument('-p', '--primarykey', default='i ', help="primary key in .o files (entry/line separator)")    
     parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file with prefix searched in .o files") 
     parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)") 
-    parser.add_argument('-c', '--colsep', default='|',help="column separator between fields of the table)") 
-    parser.add_argument('-e', '--emptyval',default=' ',help="empty value for a field of the table)") 
-    parser.add_argument('-n', '--noheader', action='store_true', help="no row or column header in the table") 
+    parser.add_argument('-c', '--colsep', default='|',help="column separator between fields of the table") 
+    parser.add_argument('-dv', '--defval',default=' ',help="default value for a field of the table") 
+    parser.add_argument('-dn', '--defname',default='UNKNOWN',help="default name for an entry of the table") 
+    parser.add_argument('-n', '--noheader', action='store_true', help="cancel row and column headers in the table") 
     parser.add_argument('--verbose', action='store_true',help="increase verbosity")
     parser.add_argument('-v','--version', action='version', version='%(prog)s 0.2')
     args=parser.parse_args()
@@ -116,9 +112,10 @@ Written by A Malapert.
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    if args.emptyval == args.colsep :
+    if args.defval == args.colsep :
         logging.warning("column separator and empty field are identical.")
 
+    ## Initialize keys
     if args.keys :
         ## read keys from a user file
         for key in args.keys:
@@ -136,7 +133,7 @@ Written by A Malapert.
     if args.output :
         outfile = args.output
         logging.info("WRITE %s" % outfile.name) 
-        if not args.noheader: write_header(outfile,keys, args)
+        write_header(outfile,keys, args)
     else :
         outfile=None
 
@@ -148,7 +145,7 @@ Written by A Malapert.
             fname=extre.sub('.res',filename);
             outfile = open(fname, 'w')
             logging.info("WRITE %s" % outfile.name) 
-            if not args.noheader: write_header(outfile,keys, args)
+            write_header(outfile,keys, args)
         logging.debug("READ %s" % filename)
         parse_entries(infile,outfile,keys, args)
         infile.close()

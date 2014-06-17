@@ -1,5 +1,12 @@
 #generated manpages 
 *.1
+*.1.gz
+
+#generated documentation
+doc/*
+
+#generated test results
+test/results/*
 
 #LateX
 *.toc 

@@ -19,12 +19,13 @@ endif
 
 # install directories
 # Common prefix
-prefix =~#/usr/local
+prefix=~
+#prefix=/usr/local
 bintdir=$(prefix)/bin
-mantdir = $(prefix)/man/man1
+mantdir=$(prefix)/man/man1
 
-manexecs=$(bins:bin/%=$(mantdir)/%.1.gz)
-binexecs=$(bins:bin/%=$(bintdir)/%)
+manfiles=$(bins:bin/%=$(mantdir)/%.1.gz)
+binfiles=$(bins:bin/%=$(bintdir)/%)
 
 all : dist ;
 
@@ -58,7 +59,7 @@ endif
 	cp $(bins) $(bintdir)
 
 uninstall: ;
-	rm -f $(binexecs) $(manexecs);
+	rm -f $(binfiles) $(manfiles);
 
 reinstall : dist-clean dist install;
 

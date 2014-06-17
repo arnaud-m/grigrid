@@ -11,17 +11,20 @@ GRIGRID is a collection of scripts that eases deployment and reporting of proble
 - GNU help2man 1.40.2 (documentation only)
 ** Documentation
    Look for the most up-to-date documentation on the GRIGRID web site.
+   \\
    The documentation is also available as manpages.
 ** Release
-A zip archive grigrid-VERSION.tar.gz contains the following directories and files:
+   A zip archive grigrid-VERSION.tar.gz contains the following directories and files:
 - bin/ 
 - doc/
 - test/
 - COPYING
 - Makefile
 - README.org
-Unzip the archive.
-Type `make' and 'make install' to install the programs and any data files and documentation (if help2man is installed).
+  Unzip the archive and type.
+   : make 
+   : make install
+to install the programs and any data files and documentation (if help2man is installed) in your home directory.
 * Problems and Categories
 ** Problems
    There are three categories of problems:
