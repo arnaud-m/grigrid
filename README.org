@@ -9,22 +9,16 @@ GRIGRID is a collection of scripts that eases deployment and reporting of proble
 - GNU bash, version 4.2.10(1)-release (i386-redhat-linux-gnu)
 - Python 2.7.3
 - GNU help2man 1.40.2 (documentation only)
+** Release
+   to install the programs and any data files and documentation (if help2man is installed) in your home directory.
+  : git clone CLONE_URL
+  : cd grigrid
+  : make 
+  : make install
 ** Documentation
    Look for the most up-to-date documentation on the GRIGRID web site.
    \\
    The documentation is also available as manpages.
-** Release
-   A zip archive grigrid-VERSION.tar.gz contains the following directories and files:
-- bin/ 
-- doc/
-- test/
-- COPYING
-- Makefile
-- README.org
-  Unzip the archive and type.
-   : make 
-   : make install
-to install the programs and any data files and documentation (if help2man is installed) in your home directory.
 * Problems and Categories
 ** Problems
    There are three categories of problems:
