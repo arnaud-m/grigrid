@@ -129,7 +129,7 @@ do
         find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESDIR'.res' -i 
     fi
     if [ $SOL ] ; then
-        find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESDIR.sol
+        find $RESDIR  -type f -name '*.o'  -print0 | xargs -r -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESDIR.sol
     fi
 done
 
@@ -138,7 +138,7 @@ if [ $KEY ] ;then
 fi
 
 if [ $SOL ] ; then
-    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESULTS/$RESULTS.sol
+    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -r -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESULTS/$RESULTS.sol
 fi
 
 
