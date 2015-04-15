@@ -140,7 +140,7 @@ if [ $SUBMODE -eq 0 ] ; then
 fi
 
 ####################################
-# Initialization ff not in debug 
+# Initialization if not in debug 
 if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
     rm -fr $RESULTS $ERRFILE
     mkdir $RESULTS
@@ -158,11 +158,15 @@ if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
         cp -a $TMPDIR $ALGODIR
     done
     rm -fr $TMPDIR
+
+    if [  $SUBMODE -eq 0 ] ; then
+        OARLOG=`mktemp oar-sub_XXX.log`
+    fi   
 fi  
 
 ###############################
 # submit one solving job for each instance and for each algorithm
-find  -H $INSTANCES  -name "$PATTERN" -print0 | while read -d $'\0' BENCHPATH
+find  -H $INSTANCES  -type f -name "$PATTERN" -print0 | while read -d $'\0' BENCHPATH
 do
     for ALGOPATH in `ls $ALGORITHMS/*` ; do
         ADIR=`basename $ALGOPATH`;
@@ -173,7 +177,7 @@ do
         OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S "
         case $SUBMODE in 
             ## OAR submission on a cluster
-            0) $OARCMD "$JOBCMD";;
+            0) $OARCMD "$JOBCMD" | tee -a $OARLOG;;
             ##serial submission on localhost
             1) $JOBCMD > $OUTFILE 2>> $ERRFILE;;
             ## debug mode (only print command)

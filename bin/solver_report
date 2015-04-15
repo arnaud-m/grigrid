@@ -88,7 +88,7 @@ Each .o file contains logs for 0, 1 or n instances.
 Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 
-Written by A Malapert.
+Written by A. Malapert.
 ''')
         );
     parser.add_argument('-i', '--input', nargs='*',help=".o files of solvers",required=True)
