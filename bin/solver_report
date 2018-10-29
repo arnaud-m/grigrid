@@ -97,7 +97,7 @@ Written by A. Malapert.
     parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)") 
     parser.add_argument('-c', '--colsep', default='|',help="column separator between fields of the table") 
     parser.add_argument('-dv', '--defval',default=' ',help="default value for a field of the table") 
-    parser.add_argument('-dn', '--defname',default='UNKNOWN',help="default name for an entry of the table") 
+    parser.add_argument('-dn', '--defname',default='NA',help="default name for an entry of the table") 
     parser.add_argument('-n', '--noheader', action='store_true', help="cancel row and column headers in the table") 
     parser.add_argument('--verbose', action='store_true',help="increase verbosity")
     parser.add_argument('-v','--version', action='version', version='%(prog)s 0.2')

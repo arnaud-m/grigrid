@@ -1,4 +1,4 @@
 #!/bin/sh
 
-../bin/gridjobs -l
-../bin/gridres -v -k keys.txt -s 
+gridjobs -l
+gridres -k keys.txt -s -z 

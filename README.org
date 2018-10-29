@@ -37,10 +37,16 @@ Complete solvers can determine if an instance is satisfiable or not (or find and
  Solvers can use several processes or threads but, it must be specified by giving oar instructions in the solver shell script. 
  Two executions of a solver with the same parameters and system resources must output the same result in approximately the same time (so that the experiments can be repeated).
 
- You need to provide grigrid with a suggested command line that should be used to run your solver. 
+ You need to provide grigrid with a suggested command line that should be used to run your solver.
+ #+BEGIN_SRC sh
+ ./solver.sh ALGOPATH BENCHPATH RANDOMSEED
+ #+END_SRC
+
+ 
  In this command line, you will be asked to use the following placeholders, which will be replaced by the actual information given by the evaluation environment.
  - ALGOPATH:
-   will be replaced by the name of the file containing the configuration of the solver (including the path to the file). It is recommended that the solver uses this parameter. - BENCHPATH:
+   will be replaced by the name of the file containing the configuration of the solver (including the path to the file). It is recommended that the solver uses this parameter.
+ - - BENCHPATH:
     will be replaced by the name of the file containing the instance to solve (including the path to the file). Obviously, the solver must use this parameter.
  - RANDOMSEED:
     will be replaced by a random seed which is a number. This parameter MUST be used to initialise the random number generator when the solver uses random numbers. It is recorded by the evaluation environment and will allow to run the program on a given instance under the same conditions if necessary. 

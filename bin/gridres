@@ -123,10 +123,12 @@ if [ $KEY ] ; then
     fi
 fi
 
+TEMPFILE=`mktemp`
 find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
 do
     if [ $KEY ] ;then
-        find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESDIR'.res' -i 
+        find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $TEMPFILE -i
+        (head -n 1 $TEMPFILE && tail -n +2 $TEMPFILE | sort -b) > $RESDIR'.res'
     fi
     if [ $SOL ] ; then
         find $RESDIR  -type f -name '*.o'  -print0 | xargs -r -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESDIR.sol
@@ -134,7 +136,8 @@ do
 done
 
 if [ $KEY ] ;then
-    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $RESULTS/$RESULTS.res -i 
+    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $TEMPFILE -i 
+    (head -n 1 $TEMPFILE && tail -n +2 $TEMPFILE | sort -b) > $RESULTS/$RESULTS'.res'
 fi
 
 if [ $SOL ] ; then
