@@ -52,7 +52,7 @@ dist-archive : dist ;
 install-dirs: ;
 	mkdir -p $(bintdir) $(mantdir);
 
-install: install-dirs;
+install: dist install-dirs;
 ifdef man1gz
 		cp $(man1gz) $(mantdir);	
 endif	
