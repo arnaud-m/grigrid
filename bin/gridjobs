@@ -32,6 +32,7 @@ ERRFILE=oar-stderr.log
 #Option arguments
 PATTERN='*'
 RANDOMSEED=$$
+
 SUBMODE=0
 DRYMODE=0
 
@@ -60,12 +61,12 @@ Usage: $PROG [OPTION]...
 
 Options:
  -p 'PATTERN'   filename pattern for instances   
- -s  SEED       random seed  
+ -s 'SEED'       random seed  
  
  -l             shell submissions on localhost (default)
  -g             grid submission with OAR
 
- -d  FMT        dry run, only print submissions in the given format   
+ -d 'FMT'       dry run, only print submissions in the given format   
  -n             do not create the directories in a dry run
 
  -h             display this help and exit
@@ -122,10 +123,6 @@ while getopts ":p:s:lgd:nhv" opt; do
 done
 
 
-#--------------------------------------------------------------------
-# Do something
-#--------------------------------------------------------------------
-
 ###################################### 
 # Check that oarsub is installed.
 # Otherwise, ask for shell submissions
@@ -151,57 +148,74 @@ if  [ $SUBMODE -le 1 ]  ; then
     DRYMODE=0
 fi
 
+###############################
+# Create oar log file for saving job ids
+if [  $SUBMODE -eq 1 ] ; then
+    OARLOG=`mktemp oar-sub_XXX.log`
+fi
+
+#--------------------------------------------------------------------
+# Do something
+#--------------------------------------------------------------------
+
 ####################################
-# Create results directories if not in dry mode
+# Clean and create results directories if not in dry mode
 if [ $DRYMODE -eq 0 ] ; then
     rm -fr $RESULTS $ERRFILE
     mkdir $RESULTS
-    
-    # copy instances directory struture into a temporary directory
-    TMPDIR=`mktemp -d gridjobs_XXXXX`
-    find  -H $INSTANCES/  -type d -print0 | while read -d $'\0' FILE
-    do
-        mkdir -p $TMPDIR/${FILE#$INSTANCES/}
-    done
-    
-    # copy instances directory struture for each algorithm
-    for ALGO in `ls $ALGORITHMS` ; do
-        ALGODIR=$RESULTS/${ALGO%.*}
-        cp -a $TMPDIR $ALGODIR
-    done
-    rm -fr $TMPDIR
+fi
 
-    if [  $SUBMODE -eq 0 ] ; then
-        OARLOG=`mktemp oar-sub_XXX.log`
-    fi   
-fi  
 
 ###############################
-# generate one job for each instance and for each algorithm
+# Retrieve the list of algorithms
+ALGOLIST=`find algorithms/ -type f  -print`
+
+###############################
+# Generate a job for each algorithm and each instance
+
+# Main loop over the instances
 find  -H $INSTANCES  -type f -name "$PATTERN" -print0 | while read -d $'\0' BENCHPATH
 do
-    for ALGOPATH in `ls $ALGORITHMS/*` ; do
-        ADIR=`basename $ALGOPATH`;
+    # Sub loop over the algorithms
+    for ALGOPATH in $ALGOLIST ; do
+        ## Retrieve algorithm filename without extension
+        ALGO=`basename $ALGOPATH`;
+        ALGO=${ALGO%.*}
+        ## Retrieve algorithm subdirectory 
+        ADIR=`dirname $ALGOPATH`"/";
+        ADIR=${ADIR##$ALGORITHMS/}
+        # Build the path of the output file
         OUTFILE=${BENCHPATH%.*}.o
         OUTFILE=${OUTFILE#$INSTANCES/} 
-        OUTFILE=$RESULTS/${ADIR%.*}/$OUTFILE
+        OUTFILE=$RESULTS/$ADIR$ALGO/$OUTFILE
+        ## Create the directory for the output file
+        if [ $DRYMODE -eq 0 ] ; then
+            mkdir -p `dirname $OUTFILE` 2> /dev/null
+        fi
+        # Create the job command
         JOBCMD="$SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED"
         OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S "
+        # Generate the job
         case $SUBMODE in 
             ## Shell submission on localhost
-            0) $JOBCMD > $OUTFILE 2>> $ERRFILE;;
+            0) $JOBCMD > $OUTFILE 2>> $ERRFILE
+               ;;
             ## OAR submission on a cluster
-            1) $OARCMD "$JOBCMD" | tee -a $OARLOG;;
+            1) $OARCMD "$JOBCMD" | tee -a $OARLOG
+               ;;
             ## print shell submission
-            2) echo "$JOBCMD > $OUTFILE 2>> $ERRFILE";;
+            2) echo "$JOBCMD > $OUTFILE 2>> $ERRFILE"
+               ;;
             ## print oar submission
-            3) echo "$OARCMD $JOBCMD";;
+            3) echo "$OARCMD $JOBCMD"
+               ;;
             ## print job command 
-            4) echo $JOBCMD;;
+            4) echo $JOBCMD
+               ;;
             *) echo "Invalid submission mode"
                exit 1
                ;;
-	    esac
+	       esac
     done
 done
 
