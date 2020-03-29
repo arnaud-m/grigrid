@@ -33,7 +33,7 @@ ERRFILE=oar-stderr.log
 PATTERN='*'
 RANDOMSEED=$$
 SUBMODE=0
-
+DRYMODE=0
 
 #--------------------------------------------------------------------
 # Version and help messages
@@ -41,9 +41,9 @@ SUBMODE=0
 
 version() {
 cat <<EOF
-$PROG 0.2
+$PROG 0.3
      
-Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
+Copyright (C) 2013-2020 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 EOF
 }
@@ -59,17 +59,19 @@ For each algorithm and each instance file, the standard output is redirected to 
 Usage: $PROG [OPTION]... 
 
 Options:
- -p 'PATTERN'     filename pattern for instances   
- -s  SEED         random seed  
+ -p 'PATTERN'   filename pattern for instances   
+ -s  SEED       random seed  
  
- -l        serial submission on localhost
- -g        grid submission with OAR
- -d        only print submission with OAR (debug)
+ -l             shell submissions on localhost (default)
+ -g             grid submission with OAR
 
- -h        display this help and exit
- -v        output version information and exit
+ -d  FMT        dry run, only print submissions in the given format   
+ -n             do not create the directories in a dry run
+
+ -h             display this help and exit
+ -v             output version information and exit
      
-Report bugs to <arnaud (dot) malapert (at) unice (dot) fr>."
+Report bugs to <arnaud (dot) malapert (at) univ-cotedazur (dot) fr>."
 EOF
 }
 
@@ -80,7 +82,7 @@ EOF
 
 
 
-while getopts ":p:s:gldhv" opt; do
+while getopts ":p:s:lgd:nhv" opt; do
     case $opt in
         p)
             PATTERN=$OPTARG
@@ -88,14 +90,17 @@ while getopts ":p:s:gldhv" opt; do
         s)
             RANDOMSEED=$OPTARG
             ;;
-        g)
+        l)
             SUBMODE=0
             ;;
-        l)
+        g)
             SUBMODE=1
             ;;
         d)
-            SUBMODE=2
+            SUBMODE=$(($OPTARG + 2))
+            ;;
+        n)
+            DRYMODE=1
             ;;
         h)
             help 
@@ -121,12 +126,13 @@ done
 # Do something
 #--------------------------------------------------------------------
 
-
-##################################
-#Check that oarsub is installed
-if [ $SUBMODE -eq 0 ] ; then
+###################################### 
+# Check that oarsub is installed.
+# Otherwise, ask for shell submissions
+if [ $SUBMODE -eq 1 ] ; then
     if which oarsub > /dev/null ; then
         #do nothing command
+        ## TODO Create log here 
         :
     else
         read -p "execute jobs on localhost (y/n) ? " -n 1 -r
@@ -135,13 +141,19 @@ if [ $SUBMODE -eq 0 ] ; then
         then
             exit 1
         fi
-        SUBMODE=1
+        SUBMODE=0
     fi     
 fi
 
+###################################### 
+# Check if dry mode is possible.
+if  [ $SUBMODE -le 1 ]  ; then
+    DRYMODE=0
+fi
+
 ####################################
-# Initialization if not in debug 
-if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
+# Create results directories if not in dry mode
+if [ $DRYMODE -eq 0 ] ; then
     rm -fr $RESULTS $ERRFILE
     mkdir $RESULTS
     
@@ -165,7 +177,7 @@ if [  $SUBMODE -eq 0 ] || [ $SUBMODE -eq 1 ] ; then
 fi  
 
 ###############################
-# submit one solving job for each instance and for each algorithm
+# generate one job for each instance and for each algorithm
 find  -H $INSTANCES  -type f -name "$PATTERN" -print0 | while read -d $'\0' BENCHPATH
 do
     for ALGOPATH in `ls $ALGORITHMS/*` ; do
@@ -176,12 +188,19 @@ do
         JOBCMD="$SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED"
         OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S "
         case $SUBMODE in 
+            ## Shell submission on localhost
+            0) $JOBCMD > $OUTFILE 2>> $ERRFILE;;
             ## OAR submission on a cluster
-            0) $OARCMD "$JOBCMD" | tee -a $OARLOG;;
-            ##serial submission on localhost
-            1) $JOBCMD > $OUTFILE 2>> $ERRFILE;;
-            ## debug mode (only print command)
-            *) echo $OARCMD "$JOBCMD";;
+            1) $OARCMD "$JOBCMD" | tee -a $OARLOG;;
+            ## print shell submission
+            2) echo "$JOBCMD > $OUTFILE 2>> $ERRFILE";;
+            ## print oar submission
+            3) echo "$OARCMD $JOBCMD";;
+            ## print job command 
+            4) echo $JOBCMD;;
+            *) echo "Invalid submission mode"
+               exit 1
+               ;;
 	    esac
     done
 done

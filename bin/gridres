@@ -33,9 +33,9 @@ DEPTH=1
 
 version() {
 cat <<EOF
-$PROG 0.2
+$PROG 0.3
      
-Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
+Copyright (C) 2013-2020 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
 
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 
@@ -66,7 +66,7 @@ Options:
   -h       display this help and exit
   -v       output version information and exit
    
-Report bugs to <arnaud (dot) malapert (at) unice (dot) fr>.
+Report bugs to <arnaud (dot) malapert (at) univ-cotedazur (dot) fr>.
 EOF
 }
 #--------------------------------------------------------------------
