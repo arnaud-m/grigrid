@@ -2,7 +2,7 @@
 ###################################################
 #     Copyright (C) 2013-2020 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
 #
-#     This program is free software: you can redistribute it and/or modify                    
+#     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
@@ -43,8 +43,8 @@ DRYMODE=0
 version() {
 cat <<EOF
 $PROG 0.3
-     
-Copyright (C) 2013-2020 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
+
+Copyright (C) 2013-2021 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 EOF
 }
@@ -52,24 +52,24 @@ EOF
 help() {
 cat <<EOF
 $PROG generates jobs that solve a problem instance with a single algorithm. $PROG operates in the current directory.
-The jobs can be submitted to localhost or to the batch scheduler OAR. 
-The job commands can also be printed on the standard output using various format : localhost (0) ; OAR (1) ; raw (2). 
+The jobs can be submitted to localhost or to the batch scheduler OAR.
+The job commands can also be printed on the standard output using various format : localhost (0) ; OAR (1) ; raw (2).
 For each solver configuration file in the directory '$ALGORITHMS', and for each file matching the pattern in the directory '$INSTANCES', $PROG submits a new job based on the shell script $SOLVER.
 Directories are visited recursivly.
 
 All error outputs are redirected to the file $ERRFILE.
 For each algorithm and for each instance file, the standard output is redirected to a file .o in the directory '$RESULTS'.
 
-Usage: $PROG [OPTION]... 
+Usage: $PROG [OPTION]...
 
 Options:
- -p 'PATTERN'   filename pattern for instances   
- -s 'SEED'       random seed  
- 
+ -p 'PATTERN'   filename pattern for instances
+ -s 'SEED'       random seed
+
  -l             shell submissions on localhost (default)
  -g             grid submission with OAR
 
- -d 'FMT'       dry run, only print submissions in the given format (0-2)   
+ -d 'FMT'       dry run, only print submissions in the given format (0-2)
  -n             do not create the directories in a dry run
 
  -h             display this help and exit
@@ -77,8 +77,8 @@ Options:
 
 Examples:
 gridjobs -d 0 -n
-gridjobs  -d 0 | nohup parallel -j 5 
-     
+gridjobs  -d 0 | nohup parallel -j 5
+
 Report bugs to <arnaud (dot) malapert (at) univ-cotedazur (dot) fr>."
 EOF
 }
@@ -111,7 +111,7 @@ while getopts ":p:s:lgd:nhv" opt; do
             DRYMODE=1
             ;;
         h)
-            help 
+            help
             exit 0
             ;;
         v)
@@ -130,13 +130,13 @@ while getopts ":p:s:lgd:nhv" opt; do
 done
 
 
-###################################### 
+######################################
 # Check that oarsub is installed.
 # Otherwise, ask for shell submissions
 if [ $SUBMODE -eq 1 ] ; then
     if which oarsub > /dev/null ; then
         #do nothing command
-        ## TODO Create log here 
+        ## TODO Create log here
         :
     else
         read -p "execute jobs on localhost (y/n) ? " -n 1 -r
@@ -146,10 +146,10 @@ if [ $SUBMODE -eq 1 ] ; then
             exit 1
         fi
         SUBMODE=0
-    fi     
+    fi
 fi
 
-###################################### 
+######################################
 # Check if dry mode is possible.
 if  [ $SUBMODE -le 1 ]  ; then
     DRYMODE=0
@@ -188,12 +188,12 @@ do
         ## Retrieve algorithm filename without extension
         ALGO=`basename $ALGOPATH`;
         ALGO=${ALGO%.*}
-        ## Retrieve algorithm subdirectory 
+        ## Retrieve algorithm subdirectory
         ADIR=`dirname $ALGOPATH`"/";
         ADIR=${ADIR##$ALGORITHMS/}
         # Build the path of the output file
         OUTFILE=${BENCHPATH%.*}.o
-        OUTFILE=${OUTFILE#$INSTANCES/} 
+        OUTFILE=${OUTFILE#$INSTANCES/}
         OUTFILE=$RESULTS/$ADIR$ALGO/$OUTFILE
         ## Create the directory for the output file
         if [ $DRYMODE -eq 0 ] ; then
@@ -203,7 +203,7 @@ do
         JOBCMD="$SOLVER $ALGOPATH $BENCHPATH $RANDOMSEED"
         OARCMD="oarsub --stderr $ERRFILE --stdout $OUTFILE -S "
         # Generate the job
-        case $SUBMODE in 
+        case $SUBMODE in
             ## Shell submission on localhost
             0) $JOBCMD > $OUTFILE 2>> $ERRFILE
                ;;
@@ -216,7 +216,7 @@ do
             ## print oar submission
             3) echo "$OARCMD $JOBCMD"
                ;;
-            ## print job command 
+            ## print job command
             4) echo $JOBCMD
                ;;
             *) echo "Invalid submission mode"
@@ -225,5 +225,3 @@ do
 	       esac
     done
 done
-
-
