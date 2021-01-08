@@ -130,7 +130,6 @@ fi
 TEMPFILE=`mktemp`
 function visitDirectory {
     # Arguments : Directory; output filename; additional arguments for the find command.
-    echo $3
     if [ $KEY ] ;then
         find $1 $3 -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $TEMPFILE -i
         (head -n 1 $TEMPFILE && tail -n +2 $TEMPFILE | sort -b) > $2$EXT
