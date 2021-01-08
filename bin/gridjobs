@@ -77,6 +77,7 @@ Options:
 
 Examples:
 gridjobs -d 0 -n
+gridjobs  -d 0 | nohup parallel -j 5 
      
 Report bugs to <arnaud (dot) malapert (at) univ-cotedazur (dot) fr>."
 EOF

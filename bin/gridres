@@ -2,7 +2,7 @@
 ############################################################################
 #     Copyright (C) 2013-2020 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
 #
-#     This program is free software: you can redistribute it and/or modify                    
+#     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
@@ -26,6 +26,7 @@ RESULTS=results
 GRIDREPORT='solver_report'
 
 DEPTH=1
+EXT=".res"
 
 #--------------------------------------------------------------------
 # Version/Help Messages
@@ -34,7 +35,7 @@ DEPTH=1
 version() {
 cat <<EOF
 $PROG 0.3
-     
+
 Copyright (C) 2013-2020 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
 
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
@@ -43,37 +44,39 @@ EOF
 }
 
 help() {
-cat <<EOF
+    cat <<EOF
 $0 summarizes results of jobs (files .o) of the directory '$RESULTS'. \
 $0 can generate two files for each directory BENCH (explored recursivly).
 
-A file BENCH.res summarizes all results formatted as follows.   
+A file BENCH.res summarizes all results formatted as follows.
 Each line represents an entry, i.e. the resolution of an instance by an algorithm, with the exception of the first line which contain the column labels.
 An entry has a fixed number of columns delimited by '|' (pretty print). The first column of the table is always the instance name. The following columns are defined by the keys.
 
-A file BENCH.sol contains all solutions.  
+A file BENCH.sol contains all solutions.
 
-Usage: $0 [OPTION]... 
-     
+Usage: $0 [OPTION]...
+
 Options:
-   -k FILE        extract results files (.res) using keys in FILE
-   -K             extract results files (.res) using default keys
-   -s             extract solution files (.sol)  
-   -d DEPTH       agregation of all results for each subdirectory at the given depth (default 1) 
-  
-  -z        compress all files of '$RESULTS'  
-  
+  -k FILE        extract results files using keys in FILE
+  -K             extract results files using default keys
+  -s             extract solution files (.sol)
+  -d DEPTH       agregation of all results for each subdirectory at the given depth (default 1)
+  -e EXT         specify the extension of the results files (default .res)
+
+  -z        compress all files of '$RESULTS'
+
   -h       display this help and exit
   -v       output version information and exit
-   
+
 Report bugs to <arnaud (dot) malapert (at) univ-cotedazur (dot) fr>.
 EOF
 }
-#--------------------------------------------------------------------
-# Test for prerequisites
-#--------------------------------------------------------------------
 
-while getopts ":k:d:Kszhv" opt; do
+    #--------------------------------------------------------------------
+    # Test for prerequisites
+    #--------------------------------------------------------------------
+
+    while getopts ":k:d:e:Kszhv" opt; do
     case $opt in
         k)
             KEY=1
@@ -82,17 +85,20 @@ while getopts ":k:d:Kszhv" opt; do
         d)
             DEPTH=$OPTARG
             ;;
+        e)
+            EXT=$OPTARG
+            ;;
         K)
             KEY=1
             ;;
-        s) 
+        s)
             SOL=1
             ;;
-        z) 
+        z)
             ZIP=1
             ;;
         h)
-            help 
+            help
             exit 0
             ;;
         v)
@@ -115,40 +121,34 @@ if [ ! $KEY$SOL$ZIP ] ; then
      exit 0
 fi
 
-if [ $KEY ] ; then
-    if [ $KEYS ] ; then
-        REPORT_CMD="$GRIDREPORT -k $KEYS"
-    else 
-        REPORT_CMD="$GRIDREPORT"
-    fi
+if [ $KEYS ] ; then
+    REPORT_CMD="$GRIDREPORT -k $KEYS"
+else
+    REPORT_CMD="$GRIDREPORT"
 fi
 
 TEMPFILE=`mktemp`
-find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
-do
+function visitDirectory {
+    # Arguments : Directory; output filename; additional arguments for the find command.
+    echo $3
     if [ $KEY ] ;then
-        find $RESDIR  -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $TEMPFILE -i
-        (head -n 1 $TEMPFILE && tail -n +2 $TEMPFILE | sort -b) > $RESDIR'.res'
+        find $1 $3 -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $TEMPFILE -i
+        (head -n 1 $TEMPFILE && tail -n +2 $TEMPFILE | sort -b) > $2$EXT
     fi
     if [ $SOL ] ; then
-        find $RESDIR  -type f -name '*.o'  -print0 | xargs -r -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESDIR.sol
+        find $1  -type f -name '*.o'  -print0 | xargs -r -0 grep -rh "v "  | sed 's/^.\{2\}//' > $2.sol
     fi
+}
+
+## Visit directory at the given depth
+find $RESULTS -mindepth $DEPTH  -maxdepth $DEPTH -type d -print0 | while read -d $'\0' RESDIR
+do
+    visitDirectory $RESDIR $RESDIR
 done
 
-if [ $KEY ] ;then
-    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -0 $REPORT_CMD  -o $TEMPFILE -i 
-    (head -n 1 $TEMPFILE && tail -n +2 $TEMPFILE | sort -b) > $RESULTS/$RESULTS'.res'
-fi
-
-if [ $SOL ] ; then
-    find $RESULTS  -maxdepth $DEPTH -type f -name '*.o'  -print0 | xargs -r -0 grep -rh "v "  | sed 's/^.\{2\}//' > $RESULTS/$RESULTS.sol
-fi
-
+## Visit the root directory until the given depth
+visitDirectory $RESULTS $RESULTS/$RESULTS "-maxdepth $DEPTH"
 
 if [ $ZIP ] ; then
     tar czf $RESULTS.tar.gz $RESULTS/*
 fi
-
-
-
-
