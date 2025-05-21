@@ -1,159 +1,148 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python
 ##########################
 # Author: A. Malapert
 # Version: 0.3
 # Licence: GPL
 ##########################
 
+# -*- coding: utf-8 -*-
 ##########################################
 # Import of external classes and functions
 
-import StringIO
+from io import StringIO
 import re
 import textwrap
 import logging
 import sys
-from sets import Set
 import argparse
-        
+
 
 ##########################
-# Definition of variables         
+# Definition of variables
 
-keys=[];
-       
+keys = []
+
 ##########################
-# Definition of functions         
+# Definition of functions
 
 def write_header(ostream, keys, args):
-    if not args.noheader : 
-        ostream.write("%-20s %s" % ( args.primarykey, args.colsep) )
+    if not args.noheader:
+        ostream.write(f"{args.primarykey:<20} {args.colsep}")
         for key in keys:
-            ostream.write("%-10s %s" % ( key[key.strip().rfind(' ')+1:], args.colsep) )
+            trimmed = key[key.strip().rfind(' ') + 1:]
+            ostream.write(f"{trimmed:<10} {args.colsep}")
         ostream.write('\n')
 
 def write_entry(ostream, results, keys, args):
     if len(results) == 0:
-        logging.debug("[%s] NO Entry" % ostream.name)
-        return None;
+        logging.debug(f"[{getattr(ostream, 'name', 'ostream')}] NO Entry")
+        return
 
-    if not args.noheader : 
-        ostream.write("%-20s %s" % ( results.get(args.primarykey, args.defname), args.colsep));
-            
+    if not args.noheader:
+        ostream.write(f"{results.get(args.primarykey, args.defname):<20} {args.colsep}")
+
     for key in keys:
         if key in results:
-            ostream.write("%10s %s" % ( results[key], args.colsep))
+            ostream.write(f"{results[key]:>10} {args.colsep}")
         else:
-            ostream.write("%10s %s" %  (args.defval, args.colsep))
-            logging.warning("[%s] Missing field '%s' for entry '%s'"%  (ostream.name, key, results.get(args.primarykey,args.defname)))                
+            ostream.write(f"{args.defval:>10} {args.colsep}")
+            logging.warning(f"[{getattr(ostream, 'name', 'ostream')}] Missing field '{key}' for entry '{results.get(args.primarykey, args.defname)}'")
     ostream.write('\n')
 
-
 def parse_entries(istream, ostream, keys, args):
-    results ={} 
+    results = {}
     for line in istream:
-        ## Search primary key
-        match=re.match(args.primarykey, line);
-        if match :
+        # Search primary key
+        match = re.match(args.primarykey, line)
+        if match:
             write_entry(ostream, results, keys, args)
-            results ={} 
-            results[args.primarykey]=line[match.end():].strip();
-        ## Search other keys
+            results = {}
+            results[args.primarykey] = line[match.end():].strip()
+        # Search other keys
         for key in keys:
-            match=re.match(key, line);
+            match = re.match(key, line)
             if match:
-                value=line[match.end():].strip();
-                if key in results: 
-                    logging.debug("[%s] value '%s' of key '%s' replaced by '%s'" % ( istream.name, results[key], key , value));
-                results[key]=value;
-    # Flush results
-    write_entry(ostream, results, keys,args)
-        
+                value = line[match.end():].strip()
+                if key in results:
+                    logging.debug(f"[{getattr(istream, 'name', 'istream')}] value '{results[key]}' of key '{key}' replaced by '{value}'")
+                results[key] = value
+    # Flush last entry
+    write_entry(ostream, results, keys, args)
+
 
 ##########################
-# Definition of a main procedure 
+# Definition of a main procedure
 if __name__ == "__main__":
-    
-    # Parse command line
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent('''\
 %(prog)s produces a table from a set of .o file.
 Each line gives information about the resolution of a single problem instance.
 Each .o file contains logs for 0, 1 or n instances.
- '''),
+'''),
         epilog=textwrap.dedent('''\
-
-%(prog)s 0.2
-Copyright (C) 2013 Arnaud Malapert (UNS CNRS).
+%(prog)s 0.3
+Copyright (C) 2013-2025 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 
 Written by A. Malapert.
 ''')
-        );
-    parser.add_argument('-i', '--input', nargs='*',help=".o files of solvers",required=True)
-    parser.add_argument('-p', '--primarykey', default='i ', help="primary key in .o files (entry/line separator)")    
-    parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file with prefix searched in .o files") 
-    parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)") 
-    parser.add_argument('-c', '--colsep', default='|',help="column separator between fields of the table") 
-    parser.add_argument('-dv', '--defval',default=' ',help="default value for a field of the table") 
-    parser.add_argument('-dn', '--defname',default='NA',help="default name for an entry of the table") 
-    parser.add_argument('-n', '--noheader', action='store_true', help="cancel row and column headers in the table") 
-    parser.add_argument('--verbose', action='store_true',help="increase verbosity")
-    parser.add_argument('-v','--version', action='version', version='%(prog)s 0.2')
-    args=parser.parse_args()
+    )
+    parser.add_argument('-i', '--input', nargs='*', help=".o files of solvers", required=True)
+    parser.add_argument('-p', '--primarykey', default='i ', help="primary key in .o files (entry/line separator)")
+    parser.add_argument('-k', '--keys', type=argparse.FileType('r'), help="text file with prefix searched in .o files", required=True)
+    parser.add_argument('-o', '--output', type=argparse.FileType('w'), help="output text file (Table with all results)")
+    parser.add_argument('-c', '--colsep', default='|', help="column separator between fields of the table")
+    parser.add_argument('-dv', '--defval', default=' ', help="default value for a field of the table")
+    parser.add_argument('-dn', '--defname', default='NA', help="default name for an entry of the table")
+    parser.add_argument('-n', '--noheader', action='store_true', help="cancel row and column headers in the table")
+    parser.add_argument('--verbose', action='store_true', help="increase verbosity")
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.3')
+    args = parser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s')
 
-    if not args.input :
-        logging.warning("nothing to do");
+    if not args.input:
+        logging.warning("nothing to do")
         exit(0)
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    if args.defval == args.colsep :
+    if args.defval == args.colsep:
         logging.warning("column separator and empty field are identical.")
 
-    ## Initialize keys
-    if args.keys :
-        ## read keys from a user file
-        for key in args.keys:
-            key=key.strip()+' ';
-            if len(key)>1 and key not in keys : keys.append(key)
-        args.keys.close();
-    else : 
-        # use default keys
-        keys.extend(['s ','o ', 'd NBSOLS ', 'd RUNTIME ','d NODES ', 'd BACKTRACKS '])
+    # Initialize keys
+    for key in args.keys:
+        key = key.strip() + ' '
+        if len(key) > 1 and key not in keys:
+            keys.append(key)
+    args.keys.close()
 
-    logging.info("KEYS %s" % str(keys)) 
-    
-    ## Initialize output file
-    extre = re.compile('\.[^\.]+$');
-    if args.output :
+    logging.info(f"KEYS {keys}")
+
+    # Output file
+    extre = re.compile(r'\.[^\.]+$')
+    if args.output:
         outfile = args.output
-        logging.info("WRITE %s" % outfile.name) 
-        write_header(outfile,keys, args)
-    else :
-        outfile=None
+        logging.info(f"WRITE {outfile.name}")
+        write_header(outfile, keys, args)
+    else:
+        outfile = None
 
-    ## Read and extract Table from log files
+    # Process input files
     for filename in args.input:
-        infile=open(filename, 'r')
-        if not args.output :
-            if outfile : outfile.close();
-            fname=extre.sub('.res',filename);
-            outfile = open(fname, 'w')
-            logging.info("WRITE %s" % outfile.name) 
-            write_header(outfile,keys, args)
-        logging.debug("READ %s" % filename)
-        parse_entries(infile,outfile,keys, args)
-        infile.close()
-    if outfile : outfile.close();
+        with open(filename, 'r') as infile:
+            if not args.output:
+                if outfile:
+                    outfile.close()
+                fname = extre.sub('.res', filename)
+                outfile = open(fname, 'w')
+                logging.info(f"WRITE {outfile.name}")
+                write_header(outfile, keys, args)
+            logging.debug(f"READ {filename}")
+            parse_entries(infile, outfile, keys, args)
 
-    
-
-    
-
-
-
+    if outfile:
+        outfile.close()
