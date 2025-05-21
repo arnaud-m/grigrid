@@ -1,6 +1,6 @@
 #!/bin/bash
 ###################################################
-#     Copyright (C) 2013-2020 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
+#     Copyright (C) 2013-2025 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ version() {
 cat <<EOF
 $PROG 0.3
 
-Copyright (C) 2013-2021 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
+Copyright (C) 2013-2025 Arnaud Malapert (Université Côte d'Azur, I3S, CNRS).
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 EOF
 }

@@ -113,12 +113,12 @@ First, you can configure the solver time limit so that it is compatible with the
 It can save some time as the solver avoids to output a certificate for each solution it found. It only outputs a certificate for the best solution which it was able to find.
 \\
 Second, you can output a 's ' line with SATISFIABLE when the first solution is found, and a certificate 'v ' line each time you find a solution which is better than the previous ones accompanied (this is mandatory) with an 'o ' line.
-Only the last complete certificate will be taken into account. If eventually, your solver proves that the last solution that was output is optimal, then it must output 's OPTIMUM FOUND'.
+Only the last complete certificate will be taken into account. If eventually, your solver proves that the last solution that was output is optimal, then it must output 's OPTIMUM'.
 A solver with is aware oar walltime can output:
 :      o 19
 :      o 16
 :      o 1
-:      s OPTIMUM FOUND
+:      s OPTIMUM
 :      v 1 4 7 8 3 4
 A solver which ignores the oar walltime may output for the same problem :
 :      c Got a first solution !
@@ -131,14 +131,14 @@ A solver which ignores the oar walltime may output for the same problem :
 :      c Found a better solution
 :      o 1
 :      v 1 4 7 8 3 4
-:      s OPTIMUM FOUND
-** TODO Timestamp
+:      s OPTIMUM
+** TODO Timestamp                                                  :noexport:
    The evaluation environment will automatically timestamp each of these lines so that it is possible to know when the solver has found a better solution and the cost of the solution. The goal is to analyse how solvers progress toward the best solution. The timestamped output will be for example:
 
 :      o 19 0.57
 :      o 16 1.23
 :      o 1 2.7
-:      s OPTIMUM FOUND 10.5
+:      s OPTIMUM 10.5
 :      v 1 4 7 8 3 4
 The last column in this example is the time at which the line was output by the solver (expressed in seconds of wall clock time since the beginning of the program).
 * Workflow
