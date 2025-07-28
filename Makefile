@@ -3,14 +3,13 @@ name=grigrid
 version=0.2
 bins=$(wildcard bin/*)
 
-
 # build directories.
 testdir=test
 mandir=man
 docdir=doc
 
 #looking for help2man
-help2man=$(shell type -t help2man > /dev/null 2>&1 && echo help2man)
+help2man=$(shell command -v help2man > /dev/null 2>&1 && echo help2man)
 ifdef $(help2man)
 man1=$(bins:bin/%=man/%.1)
 man1gz=$(man1:%=%.gz)
@@ -30,12 +29,12 @@ binfiles=$(bins:bin/%=$(bintdir)/%)
 all : dist ;
 
 dist-clean : ;
-	rm -fr $(mandir) $(docdir) 
+	rm -fr $(mandir) $(docdir)
 
 dist-dirs : dist-clean;
 	mkdir $(mandir) $(docdir)
 
-man/%.1 : bin/% 
+man/%.1 : bin/%
 	help2man -v -v -h -h --no-discard-stderr --no-info $< -o $@
 
 man/%.1.gz : man/%.1
@@ -46,7 +45,7 @@ $(manual) : $(man1);
 
 dist: dist-dirs $(manual) $(man1gz);
 
-dist-archive : dist ;	
+dist-archive : dist ;
 	tar -czf $(name)-$(version).tar.gz  .
 
 install-dirs: ;
@@ -54,8 +53,8 @@ install-dirs: ;
 
 install: dist install-dirs;
 ifdef man1gz
-		cp $(man1gz) $(mantdir);	
-endif	
+	cp $(man1gz) $(mantdir);
+endif
 	cp $(bins) $(bintdir)
 
 uninstall: ;
@@ -63,13 +62,12 @@ uninstall: ;
 
 reinstall : dist-clean dist install;
 
-test : test-clean; 
+test : test-clean;
 	cd $(testdir); ./test-grigrid.sh;
 
-#keep on a single line to preserve the cd command	
+#keep on a single line to preserve the cd command
 test-clean : ;
 	cd $(testdir); rm -f *.tar.gz *.log ; rm -fr results;
 
 
 clean: dist-clean test-clean ;
-
